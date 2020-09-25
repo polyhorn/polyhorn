@@ -1,13 +1,14 @@
 use futures::channel::mpsc::{self, TrySendError};
 use futures::{Future, StreamExt};
-use polyhorn_core::{Key, UseAsync, UseReference};
+use polyhorn_core::{UseAsync, UseReference};
 
-pub use polyhorn_core::use_id;
+#[doc(hidden)]
+pub use polyhorn_core::{use_id, Key};
 
 #[macro_export]
 macro_rules! use_channel {
     ($manager:expr, $task:expr) => {
-        $crate::UseChannel::use_channel($manager, Key::from($crate::use_id!()), $task)
+        $crate::UseChannel::use_channel($manager, $crate::Key::from($crate::use_id!()), $task)
     };
 }
 

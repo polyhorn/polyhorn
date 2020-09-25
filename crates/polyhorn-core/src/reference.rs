@@ -60,3 +60,11 @@ impl<T> Clone for Reference<T> {
         }
     }
 }
+
+impl<T> Default for Reference<T> {
+    fn default() -> Self {
+        Reference {
+            current: Weak::new(),
+        }
+    }
+}

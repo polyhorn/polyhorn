@@ -99,7 +99,7 @@ impl Element {
                 #group.into()
             },
             Element::Literal(literal) => quote! {
-                Element::string(#literal)
+                polyhorn::Element::string(#literal)
             },
         }
     }
@@ -114,7 +114,7 @@ impl RegularElement {
             .iter()
             .map(|child| child.as_tokenstream())
             .collect::<Vec<_>>();
-        let children = quote! { Element::fragment(Key::from(use_id!()), vec![
+        let children = quote! { polyhorn::Element::fragment(polyhorn::Key::from(polyhorn::hooks::use_id!()), vec![
             #(#children),*
         ]) };
 
@@ -150,7 +150,7 @@ impl RegularElement {
 
             (quote! {{
                 #error
-                Element::builtin(Key::from(use_id!()), #path, #children, #reference)
+                polyhorn::Element::builtin(polyhorn::Key::from(polyhorn::hooks::use_id!()), #path, #children, #reference)
             }})
             .into()
         } else {
@@ -182,15 +182,15 @@ impl RegularElement {
 
             let key = key
                 .map(|key| {
-                    quote! { Key::new(
+                    quote! { polyhorn::Key::new(
                         #[allow(unused_braces)]
                         #key
                     ) }
                 })
-                .unwrap_or_else(|| quote! { Key::from(use_id!()) });
+                .unwrap_or_else(|| quote! { polyhorn::Key::from(polyhorn::hooks::use_id!()) });
 
             (quote! {
-                Element::new(#key, #path {
+                polyhorn::Element::new(#key, #path {
                     #props
                     #dots
                 }.into(), #children)

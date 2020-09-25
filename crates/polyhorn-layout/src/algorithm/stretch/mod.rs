@@ -1,10 +1,12 @@
+use polyhorn_ui::geometry::{Dimension, Point, Size};
+use polyhorn_ui::styles::ViewStyle;
+
+use super::Algorithm;
+use crate::{Layout, MeasureFunc};
+
 mod convert;
 
 pub use convert::IntoStretch;
-
-use super::Algorithm;
-use crate::{Layout, MeasureFunc, Point, Size, Style};
-use polyhorn_style::Dimension;
 
 pub struct Flexbox(stretch::Stretch);
 
@@ -18,7 +20,7 @@ impl Algorithm for Flexbox {
         Flexbox(stretch::Stretch::new())
     }
 
-    fn new_node(&mut self, style: Style, children: &[Self::Node]) -> Self::Node {
+    fn new_node(&mut self, style: ViewStyle, children: &[Self::Node]) -> Self::Node {
         Node(
             self.0
                 .new_node(
@@ -29,7 +31,7 @@ impl Algorithm for Flexbox {
         )
     }
 
-    fn new_leaf(&mut self, style: Style, measure: MeasureFunc) -> Self::Node {
+    fn new_leaf(&mut self, style: ViewStyle, measure: MeasureFunc) -> Self::Node {
         Node(
             self.0
                 .new_leaf(style.into_stretch(), measure.into_stretch())
@@ -53,7 +55,7 @@ impl Algorithm for Flexbox {
         self.0.remove(node.0);
     }
 
-    fn set_style(&mut self, node: Self::Node, style: Style) {
+    fn set_style(&mut self, node: Self::Node, style: ViewStyle) {
         self.0.set_style(node.0, style.into_stretch()).unwrap();
     }
 
@@ -63,17 +65,17 @@ impl Algorithm for Flexbox {
             .unwrap();
     }
 
-    fn compute_layout(&mut self, node: Self::Node, size: Size<Dimension>) {
+    fn compute_layout(&mut self, node: Self::Node, size: Size<Dimension<f32>>) {
         self.0
             .compute_layout(
                 node.0,
                 stretch::geometry::Size {
                     width: match size.width {
-                        Dimension::Pixels(pixels) => stretch::number::Number::Defined(pixels),
+                        Dimension::Points(pixels) => stretch::number::Number::Defined(pixels),
                         _ => stretch::number::Number::Undefined,
                     },
                     height: match size.height {
-                        Dimension::Pixels(pixels) => stretch::number::Number::Defined(pixels),
+                        Dimension::Points(pixels) => stretch::number::Number::Defined(pixels),
                         _ => stretch::number::Number::Undefined,
                     },
                 },

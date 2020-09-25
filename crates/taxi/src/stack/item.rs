@@ -1,4 +1,8 @@
-use polyhorn::*;
+use polyhorn::prelude::*;
+use polyhorn_ui::assets::{ImageAsset, ImageSource};
+use polyhorn_ui::color::Color;
+use polyhorn_ui::events::EventListener;
+use polyhorn_ui::styles::{ImageStyle, Inherited, TextAlign, TextStyle};
 
 use super::ItemContext;
 
@@ -12,7 +16,7 @@ pub struct NavigationItem {
 }
 
 yoyo::yoyo!(States, {
-    opacity_transition: ease_in_out;
+    transition-opacity: ease-in-out(0.4);
 
     :initial {
         opacity: 0.0;
@@ -32,31 +36,36 @@ impl Component for NavigationItem {
         let presence: yoyo::Presence<ItemContext> = yoyo::use_presence!(manager);
 
         poly!(<yoyo::View::<States> variant={ States::Rest } style={ style! {
-            flex_grow: 1.0;
-            flex_direction: FlexDirection::Row;
-            justify_content: JustifyContent::Center;
+            flex-grow: 1.0;
+            flex-direction: row;
+            justify-content: center;
         } } presence={ presence.into_dyn() } ...>
             <View style={ style! {
-                flex_direction: FlexDirection::Row;
-                flex_shrink: 0.0;
-                flex_grow: 1.0;
-                flex_basis: 32.px();
-                justify_content: JustifyContent::FlexStart;
+                flex-direction: row;
+                flex-shrink: 0.0;
+                flex-grow: 1.0;
+                flex-basis: 32px;
+                justify-content: flex-start;
             } } ...>
                 { if self.on_back_press.is_some() {
                     Some(poly!(<yoyo::TouchableOpacity style={ style! {
-                        flex_direction: FlexDirection::Row;
-                        align_items: AlignItems::Center;
-                        padding: (0.px(), 12.px());
+                        flex-direction: row;
+                        align-items: center;
+                        padding: 0px 12px;
                     } } on_pointer_up={ self.on_back_press.clone() } ...>
-                        <Image source={ ImageSource::with_name("polyhorn-navigation/back").unwrap() }
-                           tint_color={ self.tint_color.clone() } />
+                        <Image source={ ImageSource::Asset(ImageAsset::new("polyhorn-navigation", "back",  13.0, 21.0)) }
+                                style={ ImageStyle {
+                            tint_color: Some(self.tint_color),
+                            ..Default::default()
+                        } } />
                         <View style={ style! {
-                            width: 6.px();
+                            width: 6px;
                         } } ... />
-                        <Text style={ text_style! {
-                            font:Font::system_font(17.0);
-                            color: self.tint_color.clone();
+                        <Text style={ TextStyle {
+                                color: Inherited::Specified(self.tint_color),
+                            ..style! {
+                                font-size: 17px;
+                            }
                         } }>
                             "Back"
                         </Text>
@@ -66,17 +75,17 @@ impl Component for NavigationItem {
                 } }
             </View>
             <View style={ style! {
-                flex_direction: FlexDirection::Row;
-                align_items: AlignItems::Center;
-                justify_content: JustifyContent::Center;
-                flex_grow: 1.0;
-                flex_basis: Dimension::auto();
+                flex-direction: row;
+                align-items: center;
+                justify-content: center;
+                flex-grow: 1.0;
+                flex-basis: auto;
             } } ...>
                 { match self.title {
                     Element::String(_) => poly!(
                         <Text style={ TextStyle {
-                            alignment: TextAlignment::Center,
-                            ..self.title_style.clone()
+                            text_align: Inherited::Specified(TextAlign::Center),
+                            ..self.title_style
                         } }>
                             { self.title.clone() }
                         </Text>
@@ -85,22 +94,25 @@ impl Component for NavigationItem {
                 } }
             </View>
             <View style={ style! {
-                flex_direction: FlexDirection::Row;
-                flex_shrink: 0.0;
-                flex_grow: 1.0;
-                flex_basis: 32.px();
-                justify_content: JustifyContent::FlexEnd;
+                flex-direction: row;
+                flex-shrink: 0.0;
+                flex-grow: 1.0;
+                flex-basis: 32px;
+                justify-content: flex-end;
             } } ...>
                 { match self.right {
                     Element::String(_) => poly!(
                         <yoyo::TouchableOpacity style={ style! {
-                            flex_direction: FlexDirection::Row;
-                            align_items: AlignItems::Center;
-                            padding: (0.px(), 12.px());
+                            flex-direction: row;
+                            align-items: center;
+                            padding: 0px 12px;
                         } } ...>
-                            <Text style={ text_style! {
-                                font:Font::bold_system_font(17.0);
-                                color: self.tint_color.clone();
+                            <Text style={ TextStyle {
+                                color: Inherited::Specified(self.tint_color),
+                                ..style! {
+                                    font-weight: bold;
+                                    font-size: 17px;
+                                }
                             } }>
                                 { self.right.clone() }
                             </Text>

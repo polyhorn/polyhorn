@@ -1,4 +1,5 @@
-use polyhorn::{Manager, UseContext};
+use polyhorn::hooks::UseContext;
+use polyhorn::Manager;
 
 use super::Presence;
 

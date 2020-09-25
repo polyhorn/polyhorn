@@ -1,5 +1,6 @@
 use super::navigator::NavigationProvider;
-use polyhorn::*;
+use polyhorn::prelude::*;
+use polyhorn::{Key, State};
 use std::marker::PhantomData;
 
 mod bar;
@@ -64,10 +65,10 @@ where
         }
 
         poly!(<View style={ style! {
-            flex_grow: 1.0;
+            flex-grow: 1.0;
         } } ...>
             <View style={ style! {
-                flex_grow: 1.0;
+                flex-grow: 1.0;
             } } ...>
                 <NavigationProvider on_navigate=on_navigate on_pop=on_pop>
                     { Element::new(Key::new(()), selected.to_owned().unwrap().into(), Element::fragment(Key::new(()), vec![])) }

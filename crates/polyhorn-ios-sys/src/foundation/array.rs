@@ -1,12 +1,17 @@
-use crate::{IntoRaw, Raw};
-use objc::runtime::{objc_release, Object};
+use objc::runtime::*;
 use objc::*;
 
+use crate::{IntoRaw, Raw};
+
+/// Declares the programmatic interface to objects that manage a modifiable
+/// array of objects. This class adds insertion and deletion operations to the
+/// basic array-handling behavior inherited from `NSArray`.
 pub struct NSMutableArray {
     object: *mut Object,
 }
 
 impl NSMutableArray {
+    /// Initializes a newly allocated array.
     pub fn new() -> NSMutableArray {
         unsafe {
             let mut object: *mut Object = msg_send![class!(NSMutableArray), alloc];
@@ -15,6 +20,7 @@ impl NSMutableArray {
         }
     }
 
+    /// Inserts a given object at the end of the array.
     pub fn add_object(&mut self, object: &impl Raw) {
         unsafe {
             let _: () = msg_send![self.object, addObject: object.as_raw()];
@@ -34,19 +40,17 @@ impl Raw for NSMutableArray {
 
 impl Drop for NSMutableArray {
     fn drop(&mut self) {
-        unsafe {
-            objc_release(self.object);
-        }
+        unsafe { objc_release(self.object) }
     }
 }
 
-impl<T> IntoRaw for [T]
+impl<T> IntoRaw for &[T]
 where
-    T: IntoRaw,
+    T: Copy + IntoRaw,
 {
     type Raw = NSMutableArray;
 
-    fn into_raw(&self) -> Self::Raw {
+    fn into_raw(self) -> Self::Raw {
         let mut result = NSMutableArray::new();
 
         for element in self {

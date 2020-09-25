@@ -1,6 +1,12 @@
 #import "PLYAnimationDelegate.h"
 #import "PLYView.h"
 
+@interface PLYView ()
+
+@property (nonatomic, assign) CGRect trueFrame;
+
+@end
+
 @implementation PLYView
 
 - (instancetype)init {
@@ -11,10 +17,28 @@
     return self;
 }
 
-- (void)setFrame:(CGRect)frame {
-    frame.origin.x += self.layer.transform.m41;
+- (CGRect)trueFrame {
+    CGRect frame = self.bounds;
+    
+    NSAssert(frame.origin.x == 0.0, @"Can't calculate true frame when origin is non-zero.");
+    NSAssert(frame.origin.y == 0.0, @"Can't calculate true frame when origin is non-zero.");
 
-    [super setFrame:frame];
+    frame.origin.x = self.center.x - frame.size.width / 2.0;
+    frame.origin.y = self.center.y - frame.size.height / 2.0;
+
+    return frame;
+}
+
+- (void)setTrueFrame:(CGRect)frame {
+    frame.origin.x += frame.size.width / 2.0;
+    frame.origin.y += frame.size.height / 2.0;
+
+    self.center = frame.origin;
+
+    frame.origin.x = 0.0;
+    frame.origin.y = 0.0;
+
+    self.bounds = frame;
 }
 
 - (void)updateLayout {
@@ -24,13 +48,13 @@
     if (self.layout == nil)
         return;
     
-    CGRect oldFrame = self.frame;
+    CGRect oldFrame = self.trueFrame;
     CGRect newFrame = [self.layout fetch];
     
     if (CGRectEqualToRect(oldFrame, newFrame))
         return;
     
-    self.frame = newFrame;
+    self.trueFrame = newFrame;
 }
 
 - (void)layoutSubviews {
@@ -64,10 +88,10 @@
 - (void)drawRect:(CGRect)dirtyRect {
     const CGFloat kappa = 4 * (sqrt(2.0) - 1.0) / 3.0;
 
-    CGPoint tl = [self resolvePoint:self.cornerRadii.topLeading];
-    CGPoint tr = [self resolvePoint:self.cornerRadii.topTrailing];
-    CGPoint br = [self resolvePoint:self.cornerRadii.bottomTrailing];
-    CGPoint bl = [self resolvePoint:self.cornerRadii.bottomLeading];
+    CGPoint tl = [self resolvePoint:self.cornerRadii.topLeft];
+    CGPoint tr = [self resolvePoint:self.cornerRadii.topRight];
+    CGPoint br = [self resolvePoint:self.cornerRadii.bottomLeft];
+    CGPoint bl = [self resolvePoint:self.cornerRadii.bottomRight];
 
     UIBezierPath *path = [UIBezierPath bezierPath];
 

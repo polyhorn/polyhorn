@@ -1,12 +1,16 @@
-use crate::{IntoRaw, Raw};
 use objc::runtime::{objc_release, Object};
 use objc::*;
 
+use crate::{IntoRaw, Raw};
+
+/// An object wrapper for primitive scalar numeric values.
 pub struct NSNumber {
     object: *mut Object,
 }
 
 impl NSNumber {
+    /// The number object's value expressed as a `float`, converted as
+    /// necessary.
     pub fn float_value(&self) -> f32 {
         unsafe { msg_send![self.object, floatValue] }
     }
@@ -35,16 +39,16 @@ impl From<f64> for NSNumber {
 impl IntoRaw for f32 {
     type Raw = NSNumber;
 
-    fn into_raw(&self) -> Self::Raw {
-        (*self).into()
+    fn into_raw(self) -> Self::Raw {
+        self.into()
     }
 }
 
 impl IntoRaw for f64 {
     type Raw = NSNumber;
 
-    fn into_raw(&self) -> Self::Raw {
-        (*self).into()
+    fn into_raw(self) -> Self::Raw {
+        self.into()
     }
 }
 
@@ -60,8 +64,6 @@ impl Raw for NSNumber {
 
 impl Drop for NSNumber {
     fn drop(&mut self) {
-        unsafe {
-            objc_release(self.object);
-        }
+        unsafe { objc_release(self.object) }
     }
 }

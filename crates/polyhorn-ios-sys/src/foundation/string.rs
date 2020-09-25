@@ -1,7 +1,9 @@
-use crate::{IntoRaw, Raw};
 use objc::runtime::*;
 use objc::*;
 
+use crate::{IntoRaw, Raw};
+
+/// A static, plain-text Unicode string object.
 pub struct NSString {
     object: *mut Object,
 }
@@ -20,10 +22,10 @@ impl From<&str> for NSString {
     }
 }
 
-impl IntoRaw for String {
+impl IntoRaw for &String {
     type Raw = NSString;
 
-    fn into_raw(&self) -> Self::Raw {
+    fn into_raw(self) -> Self::Raw {
         self.as_str().into()
     }
 }
@@ -40,8 +42,6 @@ impl Raw for NSString {
 
 impl Drop for NSString {
     fn drop(&mut self) {
-        unsafe {
-            objc_release(self.object);
-        }
+        unsafe { objc_release(self.object) }
     }
 }

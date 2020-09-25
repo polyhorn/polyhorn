@@ -3,8 +3,9 @@
 //! This implementation is derived from a JavaScript implementation at
 //! [https://github.com/framer/motion](https://github.com/framer/motion).
 
+use num::{Float, NumCast};
+
 use super::{Approximation, Curve};
-use num::Float;
 
 /// Decay curve that starts at a given value and decelerates to a given target
 /// value.
@@ -21,7 +22,7 @@ where
 
     /// Adjusting the time constant will change the duration of the deceleration,
     /// thereby affecting its feel.
-    pub time_constant: T,
+    pub time_constant: f32,
 }
 
 impl<T> Decay<T>
@@ -34,16 +35,19 @@ where
     }
 }
 
-impl<T> Curve<T> for Decay<T>
+impl<T> Curve for Decay<T>
 where
     T: Float,
 {
-    fn approximate(&self, time: T) -> Approximation<T> {
+    type Value = T;
+    type Velocity = T;
+
+    fn approximate(&self, time: f32) -> Approximation<T> {
         let amplitude = self.to_value - self.from_value;
-        let delta = -amplitude * (-time / self.time_constant).exp();
+        let multiplier = <T as NumCast>::from((-time / self.time_constant).exp()).unwrap();
+        let delta = -amplitude * multiplier;
 
         Approximation {
-            time,
             value: self.to_value + delta,
             velocity: T::zero(),
         }

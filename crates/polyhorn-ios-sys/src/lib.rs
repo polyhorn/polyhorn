@@ -1,40 +1,14 @@
-mod animation;
-mod application;
-mod callback;
-mod color;
-mod font;
-pub mod foundation;
-mod geo;
-mod geometry;
-mod image;
-mod image_view;
-mod keyboard_avoiding_view;
-mod label;
-mod layout;
-mod raw;
-mod scroll_view;
-mod status_bar;
-mod text_input_view;
-mod view;
-mod view_controller;
-mod window;
+#![warn(missing_docs)]
 
-pub use animation::{UIAnimationHandle, UIKeyframeAnimation};
-pub use application::UIApplication;
-pub use callback::UICallback;
-pub use color::UIColor;
-pub use font::UIFont;
-pub use geo::{CGPoint, CGRect, CGSize};
-pub use geometry::UIEdgeInsets;
-pub use image::UIImage;
-pub use image_view::UIImageView;
-pub use keyboard_avoiding_view::UIKeyboardAvoidingView;
-pub use label::UILabel;
-pub use layout::UILayout;
+//! This crate implements bindings to all the native classes we use for
+//! Polyhorn.
+
+pub mod coregraphics;
+pub mod foundation;
+pub mod polykit;
+pub mod quartzcore;
+pub mod uikit;
+
+mod raw;
+
 pub use raw::{IntoRaw, Raw};
-pub use scroll_view::{UIScrollView, UIScrollViewIndicatorStyle};
-pub use status_bar::{UIStatusBar, UIStatusBarStyle};
-pub use text_input_view::UITextInputView;
-pub use view::{UICornerRadii, UIDimension, UIDimensionKind, UIPoint, UIView};
-pub use view_controller::UIViewController;
-pub use window::UIWindow;

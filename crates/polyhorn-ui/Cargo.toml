@@ -1,0 +1,25 @@
+[package]
+name = "polyhorn-ui"
+version = "0.2.0"
+authors = ["Tim <tim@glacyr.com>"]
+edition = "2018"
+license = "MIT"
+description = "Shared API contract for multi-platform Polyhorn UI."
+repository = "https://github.com/polyhorn/polyhorn/tree/crates/polyhorn-ui"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[lib]
+
+[dependencies]
+bytes = "0.5.6"
+derivative = "2.1.1"
+num-traits = "0.2.12"
+palette = "0.5.0"
+paste = "1.0.1"
+proc-macro2 = "1.0.24"
+quote = "1.0.7"
+strum = "0.19.2"
+strum_macros = "0.19.2"
+
+casco = { version = "0.2.0", path = "../casco" }
+polyhorn-core = { version = "0.2.0", path = "../polyhorn-core" }

@@ -17,7 +17,7 @@ where
     pub to_value: T,
 
     /// This is the scale of the domain of the Bezier curve.
-    pub duration: T,
+    pub duration: f32,
 
     /// These are the two dynamic control points (`P_1` and `P_2`). The first and
     /// last control points (`P_0` and `P_3`) are fixed to `(0, 0)` and `(1, 1)`
@@ -208,22 +208,27 @@ where
     }
 }
 
-impl<T> Curve<T> for Bezier<T>
+impl<T> Curve for Bezier<T>
 where
     T: Float,
 {
-    fn approximate(&self, time: T) -> Approximation<T> {
+    type Value = T;
+    type Velocity = T;
+
+    fn approximate(&self, time: f32) -> Approximation<T> {
         let coeffs = self.coefficients();
 
-        let x = (time / self.duration).max(T::zero()).min(T::one());
-        let t = coeffs.solve_x(x, <T as NumCast>::from(0.001).unwrap());
+        let x = (time / self.duration).max(0.0).min(1.0);
+        let t = coeffs.solve_x(
+            <T as NumCast>::from(x).unwrap(),
+            <T as NumCast>::from(0.001).unwrap(),
+        );
 
         let delta = self.to_value - self.from_value;
 
         Approximation {
-            time,
             value: coeffs.sample_y(t) * delta + self.from_value,
-            velocity: if x.is_one() {
+            velocity: if x >= 1.0 {
                 T::zero()
             } else {
                 coeffs.sample_dydx(t) * delta
@@ -238,7 +243,40 @@ where
 
 #[cfg(test)]
 mod tests {
-    use super::BezierCoefficients;
+    use super::{Bezier, BezierCoefficients, Curve};
+
+    #[test]
+    fn test_bezier() {
+        let bezier = Bezier {
+            from_value: 0.0,
+            to_value: 375.0,
+            control_points: [(0.25, 0.25), (0.75, 0.75)],
+            duration: 2.0,
+        };
+        assert_eq!(bezier.approximate(0.0).value, 0.0);
+        assert_eq!(bezier.approximate(1.0).value, 187.5);
+        assert_eq!(bezier.approximate(2.0).value, 375.0);
+
+        let bezier = Bezier {
+            from_value: 375.0,
+            to_value: 0.0,
+            control_points: [(0.25, 0.25), (0.75, 0.75)],
+            duration: 2.0,
+        };
+        assert_eq!(bezier.approximate(0.0).value, 375.0);
+        assert_eq!(bezier.approximate(1.0).value, 187.5);
+        assert_eq!(bezier.approximate(2.0).value, 0.0);
+
+        let bezier = Bezier {
+            from_value: 0.0,
+            to_value: -375.0,
+            control_points: [(0.25, 0.25), (0.75, 0.75)],
+            duration: 2.0,
+        };
+        assert_eq!(bezier.approximate(0.0).value, 0.0);
+        assert_eq!(bezier.approximate(1.0).value, -187.5);
+        assert_eq!(bezier.approximate(2.0).value, -375.0);
+    }
 
     #[test]
     fn test_2nd_derivative() {

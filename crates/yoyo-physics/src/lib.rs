@@ -1,3 +1,5 @@
+#![warn(missing_docs)]
+
 //! This library implements the basic physics-based primitives we use in Yoyo.
 //! The most important task of this library is to support continuous animation.
 //!
@@ -41,9 +43,11 @@ pub mod bezier;
 pub mod decay;
 pub mod delay;
 pub mod spring;
+pub mod threshold;
 
 mod curve;
 mod sampler;
 
 pub use curve::{Approximation, Curve};
-pub use sampler::Sampler;
+pub use sampler::{KeyedIter, Sampler};
+pub use threshold::Threshold;

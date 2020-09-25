@@ -2,12 +2,10 @@ pub mod algorithm;
 
 pub use algorithm::Algorithm;
 
-mod style;
-
-pub use style::*;
+use polyhorn_ui::geometry::{Dimension, Point, Size};
 
 pub enum MeasureFunc {
-    Boxed(Box<dyn Fn(Size<polyhorn_style::Dimension>) -> Size<f32>>),
+    Boxed(Box<dyn Fn(Size<Dimension<f32>>) -> Size<f32>>),
 }
 
 pub struct Layout {

@@ -60,14 +60,17 @@ where
     }
 }
 
-impl<T> Curve<T> for Spring<T>
+impl<T> Curve for Spring<T>
 where
     T: Float,
 {
+    type Value = T;
+    type Velocity = T;
+
     /// This function approximates a spring's oscillation and velocity at the
     /// given timestamp.
-    fn approximate(&self, time: T) -> Approximation<T> {
-        let time = time * <T as NumCast>::from(1000.0).unwrap();
+    fn approximate(&self, time: f32) -> Approximation<T> {
+        let time = <T as NumCast>::from(time * 1000.0).unwrap();
 
         let c = self.damping;
         let m = self.mass;
@@ -121,7 +124,6 @@ where
                         - omega1 * x0 * (omega1 * time).sin());
 
             Approximation {
-                time: time / <T as NumCast>::from(1000.0).unwrap(),
                 value: oscillation,
                 velocity,
             }
@@ -133,7 +135,6 @@ where
                 envelope * (v0 * (time * omega0 - T::one()) + time * x0 * (omega0 * omega0));
 
             Approximation {
-                time: time / <T as NumCast>::from(1000.0).unwrap(),
                 value: oscillation,
                 velocity,
             }
@@ -157,7 +158,6 @@ where
                     / omega2;
 
             Approximation {
-                time: time / <T as NumCast>::from(1000.0).unwrap(),
                 value: oscillation,
                 velocity,
             }
@@ -185,6 +185,27 @@ mod tests {
             initial_velocity: 0.0,
             overshoot_clamping: false,
             allows_overdamping: false,
+        };
+
+        let y = Sampler::new(&spring, 20.0)
+            .map(|approx| approx.value)
+            .collect::<Vec<_>>();
+
+        println!("y: {:?}", y);
+        println!("y: {:?}", y.len());
+    }
+
+    #[test]
+    fn test_spring_ios() {
+        let spring = Spring {
+            from_value: 0.0,
+            to_value: 320.0,
+            stiffness: 1000.0,
+            damping: 500.0,
+            mass: 3.0,
+            initial_velocity: 0.0,
+            overshoot_clamping: false,
+            allows_overdamping: true,
         };
 
         let y = Sampler::new(&spring, 20.0)

@@ -1,7 +1,8 @@
-use casco::Parser;
+use casco::StyleSheet;
 use proc_macro2::{Delimiter, TokenStream, TokenTree};
+use quote::quote;
 
-use super::{Automaton, Codegen, Driver};
+use super::{Automaton, CascoError, Codegen, Driver};
 
 pub fn yoyo_impl(input: TokenStream) -> TokenStream {
     let mut input = input.into_iter();
@@ -26,17 +27,18 @@ pub fn yoyo_impl(input: TokenStream) -> TokenStream {
         _ => unimplemented!("TODO: emit error."),
     };
 
-    let parser = Parser::new(&Driver);
-    let parse = parser.parse(group.stream().into_iter());
+    let stream = casco::proc_macro2::TokenStream::from(group.stream());
 
-    assert_eq!(
-        parse.errors.len(),
-        0,
-        "Encountered parse errors: {:#?}",
-        parse.errors
-    );
+    let stylesheet =
+        match StyleSheet::parse(&mut Driver::new(), &stream.into_iter().collect::<Vec<_>>()) {
+            Ok(stylesheet) => stylesheet,
+            Err(error) => {
+                let error = error.into_iter().map(|error| CascoError(error));
+                return quote! { #(#error)* };
+            }
+        };
 
-    let automaton = Automaton::new(&parse);
+    let automaton = Automaton::new(stylesheet);
 
     let mut variants = automaton.variants().collect::<Vec<_>>();
     variants.sort_by_key(|(edge, _)| edge.presedence());

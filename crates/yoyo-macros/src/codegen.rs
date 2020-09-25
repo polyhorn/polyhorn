@@ -3,76 +3,37 @@ use proc_macro2::{Ident, Span, TokenStream};
 use quote::quote;
 use std::collections::HashSet;
 
-use super::{Edge, Style, Transition};
+use super::{Edge, Style};
 
 pub struct Codegen<'a> {
-    variants: &'a [(Edge<'a>, Style)],
+    variants: &'a [(&'a Edge, Style)],
 }
 
 impl<'a> Codegen<'a> {
-    pub fn new(variants: &'a [(Edge<'a>, Style)]) -> Codegen<'a> {
+    pub fn new(variants: &'a [(&'a Edge, Style)]) -> Codegen<'a> {
         Codegen { variants }
     }
 
-    pub fn generate_f32(value: f32) -> TokenStream {
-        let is_negative = value.is_sign_negative();
-
-        if is_negative {
-            let value = value.abs();
-            quote! { -#value }
-        } else {
-            quote! { #value }
-        }
-    }
-
     pub fn generate_style(style: &Style) -> TokenStream {
-        let opacity = Self::generate_f32(style.opacity);
-        let transform_translation_x = Self::generate_f32(style.transform_translation_x);
+        let opacity = &style.opacity;
+        let transform = &style.transform;
 
         quote! {
             yoyo::Style {
                 opacity: #opacity,
-                transform_translation_x: #transform_translation_x,
-                ..yoyo::Style::default()
-            }
-        }
-    }
-
-    pub fn generate_transition(transition: &Transition) -> TokenStream {
-        match transition {
-            Transition::Step => quote! { yoyo::Transition::Step },
-            Transition::Delay(delay) => quote! { yoyo::Transition::Delay(#delay) },
-            Transition::EaseInOut => quote! { yoyo::Transition::Tween(yoyo::Tween {
-                duration: 0.3,
-                easing: yoyo::Easing::EaseInOut
-            }) },
-            Transition::Spring(spring) => {
-                let stiffness = spring.stiffness;
-                let damping = spring.damping;
-                let mass = spring.mass;
-                let allows_overdamping = spring.allows_overdamping;
-                let overshoot_clamping = spring.overshoot_clamping;
-
-                quote! { yoyo::Transition::Spring(yoyo::Spring {
-                    stiffness: #stiffness,
-                    damping: #damping,
-                    mass: #mass,
-                    allows_overdamping: #allows_overdamping,
-                    overshoot_clamping: #overshoot_clamping,
-                }) }
+                transform: [#(#transform),*],
             }
         }
     }
 
     pub fn generate_transitions(style: &Style) -> TokenStream {
-        let opacity = Self::generate_transition(&style.opacity_transition);
-        let transform_translation_x =
-            Self::generate_transition(&style.transform_translation_x_transition);
+        let opacity = &style.transitions.opacity;
+        let transform = &style.transitions.transform;
 
         quote! {
             yoyo::Transitions {
                 opacity: #opacity,
-                transform_translation_x: #transform_translation_x,
+                transform: #transform,
             }
         }
     }
@@ -94,11 +55,11 @@ impl<'a> Codegen<'a> {
 
         for (edge, _) in self.variants {
             if let Some(from) = edge.from() {
-                names.insert(from);
+                names.insert(&from);
             }
 
             if let Some(to) = edge.to() {
-                names.insert(to);
+                names.insert(&to);
             }
         }
 

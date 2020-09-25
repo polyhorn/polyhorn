@@ -1,6 +1,6 @@
 [package]
 name = "polyhorn-layout"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Tim <tim@glacyr.com>"]
 edition = "2018"
 license = "MIT"
@@ -14,7 +14,7 @@ repository = "https://github.com/polyhorn/polyhorn/tree/crates/polyhorn-layout"
 stretch = { version = "0.3.2", optional = true }
 yoga = { package = "polyhorn-yoga", version = "0.3.2", optional = true }
 
-polyhorn-style = { path = "../polyhorn-style", version = "0.1.0" }
+polyhorn-ui = { path = "../polyhorn-ui", version = "0.2.0" }
 
 [features]
 default = ["impl-yoga"]

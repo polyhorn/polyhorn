@@ -1,4 +1,5 @@
-use polyhorn::*;
+use polyhorn::prelude::*;
+use polyhorn_ui::events::EventListener;
 use yoyo::{components::DynPresence, use_presence, Presence};
 
 use super::ModalContext;
@@ -24,7 +25,7 @@ impl Component for ModalContainer {
             dismissed.replace(());
 
             if is_present {
-                on_dismiss.call(event);
+                on_dismiss.emit(event);
             } else {
                 safe_to_remove.invoke();
             }

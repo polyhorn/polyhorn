@@ -1,5 +1,5 @@
-use yoyo_physics as physics;
-use num::{Float, NumCast};
+use num_traits::{Float, NumCast};
+use yoyo_physics::Curve;
 
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum Easing {
@@ -77,9 +77,9 @@ impl Transition {
         from_value: T,
         to_value: T,
         velocity: T,
-    ) -> Box<dyn physics::Curve<T> + Send + Sync>
+    ) -> Box<dyn Curve<Value = T, Velocity = T> + Send + Sync>
     where
-        T: Float + Send + Sync + 'static,
+        T: Float + NumCast + Send + Sync + 'static,
     {
         match self {
             Transition::Step => {
@@ -88,18 +88,18 @@ impl Transition {
             Transition::Tween(tween) => {
                 let control_points = tween.easing.control_points();
 
-                let curve = physics::bezier::Bezier {
+                let curve = yoyo_physics::bezier::Bezier {
                     from_value,
                     to_value,
-                    duration: <T as NumCast>::from(tween.duration).unwrap(),
+                    duration: tween.duration,
                     control_points: [
                         (
-                            <T as NumCast>::from(control_points[0]).unwrap(),
-                            <T as NumCast>::from(control_points[1]).unwrap(),
+                            T::from(control_points[0]).unwrap(),
+                            T::from(control_points[1]).unwrap(),
                         ),
                         (
-                            <T as NumCast>::from(control_points[2]).unwrap(),
-                            <T as NumCast>::from(control_points[3]).unwrap(),
+                            T::from(control_points[2]).unwrap(),
+                            T::from(control_points[3]).unwrap(),
                         ),
                     ],
                 };
@@ -107,24 +107,33 @@ impl Transition {
                 Box::new(curve)
             }
             Transition::Spring(spring) => {
-                let curve = physics::spring::Spring {
+                let curve = yoyo_physics::spring::Spring {
                     from_value,
                     to_value,
                     initial_velocity: velocity,
-                    stiffness: <T as NumCast>::from(spring.stiffness).unwrap(),
-                    damping: <T as NumCast>::from(spring.damping).unwrap(),
-                    mass: <T as NumCast>::from(spring.mass).unwrap(),
+                    stiffness: T::from(spring.stiffness).unwrap(),
+                    damping: T::from(spring.damping).unwrap(),
+                    mass: T::from(spring.mass).unwrap(),
                     allows_overdamping: spring.allows_overdamping,
                     overshoot_clamping: spring.overshoot_clamping,
                 };
 
                 Box::new(curve)
             }
-            Transition::Delay(delay) => Box::new(physics::delay::Delay {
+            Transition::Delay(duration) => Box::new(yoyo_physics::delay::Delay {
                 from_value,
                 to_value,
-                duration: <T as NumCast>::from(delay).unwrap(),
+                duration,
             }),
         }
     }
+}
+
+#[derive(Copy, Clone, Debug, Default, PartialEq)]
+pub struct TransformTransition {
+    pub perspective: Transition,
+    pub rotation: Transition,
+    pub scale: Transition,
+    pub skew: Transition,
+    pub translation: Transition,
 }

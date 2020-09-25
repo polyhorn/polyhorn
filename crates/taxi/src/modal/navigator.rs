@@ -1,4 +1,5 @@
-use polyhorn::*;
+use polyhorn::prelude::*;
+use polyhorn::{Key, Reference};
 use std::marker::PhantomData;
 use yoyo::AnimatePresence;
 
@@ -69,7 +70,7 @@ where
             .collect();
 
         poly!(<View style={ style! {
-            flex_grow: 1.0;
+            flex-grow: 1.0;
         } } ...>
             <NavigationProvider on_navigate=on_navigate on_pop=on_pop>
                 <AnimatePresence::<ModalContext> ...>

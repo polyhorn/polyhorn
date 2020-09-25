@@ -1,11 +1,12 @@
-use crate as yoyo;
-use polyhorn::*;
+use polyhorn::prelude::*;
+use polyhorn_ui::events::EventListener;
+use polyhorn_ui::styles::ViewStyle;
 
-use super::View;
+use crate as yoyo;
 
 #[derive(Default)]
 pub struct TouchableOpacity {
-    pub style: Style,
+    pub style: ViewStyle,
     pub on_pointer_down: EventListener<()>,
     pub on_pointer_up: EventListener<()>,
 }
@@ -20,16 +21,16 @@ yoyo::yoyo!(States, {
     // We only animate the transition between `:press` and `:initial`
     // (not vice versa).
     :from(:press) {
-        opacity_transition: ease_in_out;
+        transition-opacity: ease-in-out(0.4);
     }
 });
 
 impl Component for TouchableOpacity {
     fn render(&self, manager: &mut Manager) -> Element {
-        poly!(<View::<States> variant={ States::Initial } style={ self.style.clone() }
+        poly!(<yoyo::View::<States> variant={ States::Initial } style={ self.style.clone() }
                       on_pointer_down={ self.on_pointer_down.clone() }
                         on_pointer_up={ self.on_pointer_up.clone() } ...>
             { manager.children() }
-        </View::<States>>)
+        </yoyo::View::<States>>)
     }
 }

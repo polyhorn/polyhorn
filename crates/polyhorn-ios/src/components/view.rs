@@ -1,10 +1,13 @@
 use futures::channel::mpsc;
 use futures::StreamExt;
-use polyhorn_core::{CommandBuffer, Compositor};
-use polyhorn_ios_sys::{CGRect, UICallback, UICornerRadii, UIPoint, UIView};
-use polyhorn_layout as layout;
+use polyhorn_core::CommandBuffer as _;
+use polyhorn_ios_sys::coregraphics::CGRect;
+use polyhorn_ios_sys::polykit::{PLYCallback, PLYView};
 
-use crate::*;
+use crate::handles::ViewHandle;
+use crate::prelude::*;
+use crate::raw::{Apply, Builtin, Container, ContainerID, OpaqueContainer};
+use crate::{Key, Reference};
 
 pub enum Message {
     PointerDown,
@@ -12,80 +15,7 @@ pub enum Message {
     PointerUp,
 }
 
-pub struct ViewHandle {
-    container_id: Reference<ContainerID>,
-    compositor: crate::compositor::Compositor,
-}
-
-#[derive(Copy, Clone, Debug, Default, PartialEq)]
-pub struct Bounds {
-    pub width: f32,
-    pub height: f32,
-}
-
-impl ViewHandle {
-    pub fn animate<F>(&mut self, animations: F)
-    where
-        F: FnOnce(&mut Animator) + Send + 'static,
-    {
-        // Create a new command buffer.
-        let mut buffer = self.compositor.buffer();
-
-        self.animate_with_buffer(&mut buffer, animations);
-
-        // And finally, commit the command buffer to synchronize the mutation.
-        buffer.commit();
-    }
-
-    pub fn animate_with_buffer<F>(&mut self, buffer: &mut crate::CommandBuffer, animations: F)
-    where
-        F: FnOnce(&mut Animator) + Send + 'static,
-    {
-        let container_id = match self.container_id.to_owned() {
-            Some(container_id) => container_id,
-            None => panic!("Can't animate view that has not yet been mounted."),
-        };
-
-        // Add a mutation of the container to the command buffer.
-        buffer.mutate(&[container_id], |containers| {
-            if let Some(view) = containers[0].container().to_view() {
-                animations(&mut Animator::new(view));
-            }
-        });
-    }
-
-    pub fn size_with_buffer<F>(&mut self, buffer: &mut crate::CommandBuffer, callback: F)
-    where
-        F: FnOnce(Bounds) + Send + 'static,
-    {
-        let container_id = match self.container_id.to_owned() {
-            Some(container_id) => container_id,
-            None => panic!("Can't measure view that has not yet been mounted."),
-        };
-
-        buffer.mutate(&[container_id], |containers| {
-            if let Some(view) = containers[0].container().to_view() {
-                let frame = view.frame();
-                let bounds = Bounds {
-                    width: frame.size.width as _,
-                    height: frame.size.height as _,
-                };
-                callback(bounds);
-            }
-        });
-    }
-}
-
-#[derive(Default)]
-pub struct View {
-    pub style: Style,
-    pub on_pointer_cancel: EventListener<()>,
-    pub on_pointer_down: EventListener<()>,
-    pub on_pointer_up: EventListener<()>,
-    pub reference: Option<Reference<ViewHandle>>,
-}
-
-impl Container for UIView {
+impl Container for PLYView {
     fn mount(&mut self, child: &mut OpaqueContainer) {
         if let Some(view) = child.container().to_view() {
             self.add_subview(&view)
@@ -101,33 +31,20 @@ impl Container for UIView {
         self.remove_from_superview();
     }
 
-    fn to_view(&self) -> Option<UIView> {
+    fn to_view(&self) -> Option<PLYView> {
         Some(self.clone())
     }
 }
 
-fn convert_dimension_to_ui(dimension: polyhorn_style::Dimension) -> polyhorn_ios_sys::UIDimension {
-    match dimension {
-        polyhorn_style::Dimension::Pixels(pixels) => polyhorn_ios_sys::UIDimension {
-            kind: polyhorn_ios_sys::UIDimensionKind::Pixels,
-            value: pixels as _,
-        },
-        polyhorn_style::Dimension::Percent(percent) => polyhorn_ios_sys::UIDimension {
-            kind: polyhorn_ios_sys::UIDimensionKind::Percentage,
-            value: percent as _,
-        },
-        _ => polyhorn_ios_sys::UIDimension {
-            kind: polyhorn_ios_sys::UIDimensionKind::Pixels,
-            value: 0.0,
-        },
-    }
-}
+/// Specializes the generic View component with the iOS-specific concrete
+/// view handle.
+pub type View = polyhorn_ui::components::View<ViewHandle>;
 
 impl Component for View {
     fn render(&self, manager: &mut Manager) -> Element {
         let view_ref: Reference<ContainerID> = use_reference!(manager);
         let view_ref_effect = view_ref.clone();
-        let style = self.style.clone();
+        let style = self.style;
 
         let tx = use_reference!(manager);
         let mut rx = None;
@@ -150,15 +67,10 @@ impl Component for View {
         let on_pointer_up_ref = use_reference!(manager);
         on_pointer_up_ref.replace(self.on_pointer_up.clone());
 
-        match &self.reference {
-            Some(reference) if reference.is_none() => {
-                reference.replace(ViewHandle {
-                    compositor: manager.compositor().clone(),
-                    container_id: view_ref.clone(),
-                });
-            }
-            _ => {}
-        }
+        self.reference.replace(ViewHandle {
+            compositor: manager.compositor().clone(),
+            container_id: view_ref.clone(),
+        });
 
         use_async!(manager, async move {
             if let Some(mut rx) = rx {
@@ -166,17 +78,17 @@ impl Component for View {
                     match message {
                         Message::PointerCancel => {
                             if let Some(on_pointer_cancel) = on_pointer_cancel_ref.to_owned() {
-                                on_pointer_cancel.call(());
+                                on_pointer_cancel.emit(());
                             }
                         }
                         Message::PointerDown => {
                             if let Some(on_pointer_down) = on_pointer_down_ref.to_owned() {
-                                on_pointer_down.call(());
+                                on_pointer_down.emit(());
                             }
                         }
                         Message::PointerUp => {
                             if let Some(on_pointer_up) = on_pointer_up_ref.to_owned() {
-                                on_pointer_up.call(());
+                                on_pointer_up.emit(());
                             }
                         }
                     }
@@ -198,62 +110,10 @@ impl Component for View {
                     None => return,
                 };
 
-                layout.set_style(layout::Style {
-                    size: layout::Size {
-                        width: style.width,
-                        height: style.height,
-                    },
-                    min_size: layout::Size {
-                        width: style.min_width,
-                        height: style.min_height,
-                    },
-                    max_size: layout::Size {
-                        width: style.max_width,
-                        height: style.max_height,
-                    },
-                    position: style.position,
-                    flex_direction: style.flex_direction,
-                    flex_basis: style.flex_basis,
-                    flex_grow: style.flex_grow,
-                    flex_shrink: style.flex_shrink,
-                    align_items: style.align_items,
-                    justify_content: style.justify_content,
-                    margin: layout::Insets {
-                        top: style.margin.top,
-                        trailing: style.margin.trailing,
-                        bottom: style.margin.bottom,
-                        leading: style.margin.leading,
-                    },
-                    padding: layout::Insets {
-                        top: style.padding.top,
-                        trailing: style.padding.trailing,
-                        bottom: style.padding.bottom,
-                        leading: style.padding.leading,
-                    },
-                    ..Default::default()
-                });
+                layout.set_style(style);
 
-                if let Some(view) = container.downcast_mut::<UIView>() {
-                    view.set_background_color(style.background_color.clone().into());
-                    view.set_alpha(style.opacity as _);
-
-                    let top_leading = convert_dimension_to_ui(style.border_radius.top_leading);
-                    let top_trailing = convert_dimension_to_ui(style.border_radius.top_trailing);
-                    let bottom_trailing =
-                        convert_dimension_to_ui(style.border_radius.bottom_trailing);
-                    let bottom_leading =
-                        convert_dimension_to_ui(style.border_radius.bottom_leading);
-
-                    view.set_corner_radii(UICornerRadii {
-                        top_leading: UIPoint::new(top_leading as _, top_leading as _),
-                        top_trailing: UIPoint::new(top_trailing as _, top_trailing as _),
-                        bottom_trailing: UIPoint::new(bottom_trailing as _, bottom_trailing as _),
-                        bottom_leading: UIPoint::new(bottom_leading as _, bottom_leading as _),
-                    });
-
-                    view.set_hidden(style.visibility.is_hidden());
-
-                    view.set_transform_translation_x(style.transform_translation_x);
+                if let Some(view) = container.downcast_mut::<PLYView>() {
+                    style.apply(view);
 
                     view.set_layout(move || {
                         let current = layout.current();
@@ -269,7 +129,7 @@ impl Component for View {
                     {
                         let mut tx = tx.clone();
 
-                        view.set_on_pointer_cancel(UICallback::new(move |_| {
+                        view.set_on_pointer_cancel(PLYCallback::new(move |_| {
                             let _ = tx.try_send(Message::PointerCancel);
                         }));
                     }
@@ -277,7 +137,7 @@ impl Component for View {
                     {
                         let mut tx = tx.clone();
 
-                        view.set_on_pointer_down(UICallback::new(move |_| {
+                        view.set_on_pointer_down(PLYCallback::new(move |_| {
                             let _ = tx.try_send(Message::PointerDown);
                         }));
                     }
@@ -285,7 +145,7 @@ impl Component for View {
                     {
                         let mut tx = tx.clone();
 
-                        view.set_on_pointer_up(UICallback::new(move |_| {
+                        view.set_on_pointer_up(PLYCallback::new(move |_| {
                             let _ = tx.try_send(Message::PointerUp);
                         }));
                     }

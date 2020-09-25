@@ -80,10 +80,10 @@
 - (void)drawRect:(CGRect)dirtyRect {
     const CGFloat kappa = 4 * (sqrt(2.0) - 1.0) / 3.0;
 
-    CGPoint tl = [self resolvePoint:self.cornerRadii.topLeading];
-    CGPoint tr = [self resolvePoint:self.cornerRadii.topTrailing];
-    CGPoint br = [self resolvePoint:self.cornerRadii.bottomTrailing];
-    CGPoint bl = [self resolvePoint:self.cornerRadii.bottomLeading];
+    CGPoint tl = [self resolvePoint:self.cornerRadii.topLeft];
+    CGPoint tr = [self resolvePoint:self.cornerRadii.topRight];
+    CGPoint br = [self resolvePoint:self.cornerRadii.bottomRight];
+    CGPoint bl = [self resolvePoint:self.cornerRadii.bottomLeft];
 
     UIBezierPath *path = [UIBezierPath bezierPath];
 

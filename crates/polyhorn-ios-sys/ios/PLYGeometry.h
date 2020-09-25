@@ -16,8 +16,24 @@ typedef struct {
 } PLYPoint;
 
 typedef struct {
-    PLYPoint topLeading;
-    PLYPoint topTrailing;
-    PLYPoint bottomTrailing;
-    PLYPoint bottomLeading;
+    PLYPoint topLeft;
+    PLYPoint topRight;
+    PLYPoint bottomRight;
+    PLYPoint bottomLeft;
 } PLYCornerRadii;
+
+typedef struct PLYDimensionLayoutAxisX {
+    bool independent;
+    PLYDimension start;
+    PLYDimension end;
+} PLYDimensionLayoutAxisX;
+
+typedef struct PLYDimensionLayoutAxisY {
+    PLYDimension top;
+    PLYDimension bottom;
+} PLYDimensionLayoutAxisY;
+
+typedef struct PLYDimensionByEdge {
+    PLYDimensionLayoutAxisX horizontal;
+    PLYDimensionLayoutAxisY vertical;
+} PLYDimensionByEdge;

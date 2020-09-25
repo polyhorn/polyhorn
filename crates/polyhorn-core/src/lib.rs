@@ -35,3 +35,13 @@ pub use platform::Platform;
 pub use reference::Reference;
 pub use render::{render, Renderer};
 pub use state::State;
+
+#[macro_export]
+macro_rules! with {
+    (($($name:ident),*), $($tt:tt)*) => {{
+        $(
+            let $name = $name.clone();
+        )*
+        move $($tt)*
+    }};
+}

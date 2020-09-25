@@ -1,4 +1,5 @@
-use polyhorn::*;
+use polyhorn::prelude::*;
+use polyhorn::Key;
 use std::collections::HashSet;
 
 use super::{Memory, PresenceContext, SafeToRemove};

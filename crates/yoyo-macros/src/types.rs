@@ -1,8 +1,18 @@
-#[derive(Copy, Clone, Debug)]
+use polyhorn_ui::styles::Transform;
+use strum_macros::EnumString;
+
+#[derive(Copy, Clone, Debug, EnumString)]
 pub enum Transition {
+    #[strum(serialize = "step")]
     Step,
-    EaseInOut,
+
+    #[strum(disabled)]
+    EaseInOut(f32),
+
+    #[strum(disabled)]
     Spring(Spring),
+
+    #[strum(disabled)]
     Delay(f32),
 }
 
@@ -33,21 +43,35 @@ impl Default for Spring {
     }
 }
 
+#[derive(Copy, Clone, Debug, Default)]
+pub struct Transitions {
+    pub opacity: Transition,
+    pub transform: TransformTransition,
+}
+
+#[derive(Copy, Clone, Debug, Default)]
+pub struct TransformTransition {
+    pub translation: Transition,
+    pub scale: Transition,
+    pub skew: Transition,
+    pub perspective: Transition,
+    pub rotation: Transition,
+}
+
 #[derive(Copy, Clone, Debug)]
 pub struct Style {
     pub opacity: f32,
-    pub opacity_transition: Transition,
-    pub transform_translation_x: f32,
-    pub transform_translation_x_transition: Transition,
+    pub transform: [Transform<f32>; 8],
+
+    pub transitions: Transitions,
 }
 
 impl Default for Style {
     fn default() -> Self {
         Style {
             opacity: 1.0,
-            opacity_transition: Transition::Step,
-            transform_translation_x: 0.0,
-            transform_translation_x_transition: Transition::Step,
+            transform: Default::default(),
+            transitions: Default::default(),
         }
     }
 }

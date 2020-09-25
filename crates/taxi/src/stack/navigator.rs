@@ -1,4 +1,8 @@
-use polyhorn::*;
+use polyhorn::prelude::*;
+use polyhorn::Reference;
+use polyhorn_ui::color::Color;
+use polyhorn_ui::events::EventListener;
+use polyhorn_ui::styles::{TextStyle, ViewStyle};
 use std::marker::PhantomData;
 
 use super::{
@@ -11,7 +15,7 @@ where
     T: Screen,
 {
     pub marker: PhantomData<T>,
-    pub header_style: Style,
+    pub header_style: ViewStyle,
     pub header_tint_color: Color,
     pub header_title_style: TextStyle,
 }
@@ -23,15 +27,15 @@ where
     fn default() -> Self {
         Navigator {
             marker: Default::default(),
-            header_style: Style {
-                background_color: Color::from_rgba(247, 247, 247, 0.8),
+            header_style: ViewStyle {
+                background_color: Color::rgba(247, 247, 247, 0.8),
                 ..Default::default()
             },
-            header_tint_color: Color::from_hex(0x007AFF),
-            header_title_style: TextStyle {
-                color: Some(Color::from_hex(0x000000)),
-                font: Some(Font::bold_system_font(17.0)),
-                ..Default::default()
+            header_tint_color: Color::hex(0x007AFF),
+            header_title_style: style! {
+                color: black;
+                font-size: 17px;
+                font-weight: bold;
             },
         }
     }
@@ -82,26 +86,26 @@ where
         }).collect();
 
         poly!(<View style={ style! {
-            flex_grow: 1.0;
+            flex-grow: 1.0;
         } } ...>
             <NavigationProvider on_navigate=on_navigate on_pop=on_pop>
                 <NavigationBar style={ self.header_style.clone() }>
                     <yoyo::AnimatePresence::<ItemContext> initial=false ...>
                         <NavigationItem key={ ("Item", depth) }
-                                 tint_color={ self.header_tint_color.clone() }
+                                 tint_color={ self.header_tint_color }
                                        left={ Element::empty() }
                                       title={ last.render_header_title() }
                                       right={ last.render_header_right() }
-                                title_style={ self.header_title_style.clone() }
+                                title_style={ self.header_title_style }
                               on_back_press={ if depth > 0 {
                             on_back_press.into()
                         } else {
-                            EventListener::none()
+                            EventListener::default()
                         } } />
                     </yoyo::AnimatePresence::<ItemContext>>
                 </NavigationBar>
                 <View style={ style! {
-                    flex_grow: 1.0;
+                    flex-grow: 1.0;
                 } } ...>
                     <yoyo::AnimatePresence::<ContainerContext> initial=false ...>
                         { containers }

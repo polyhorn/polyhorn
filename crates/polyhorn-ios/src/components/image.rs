@@ -1,29 +1,34 @@
 use polyhorn_core::CommandBuffer;
-use polyhorn_ios_sys::{CGRect, UIImageView, UIView};
-use polyhorn_layout as layout;
-use polyhorn_style::Dimension;
+use polyhorn_ios_sys::coregraphics::CGRect;
+use polyhorn_ios_sys::polykit::{PLYImageView, PLYView};
+use polyhorn_ios_sys::uikit::UIImage;
+use polyhorn_ui::assets::{Asset, ImageSource};
+use polyhorn_ui::geometry::{Dimension, Size};
+use polyhorn_ui::styles::ViewStyle;
 
-use crate::*;
+use crate::prelude::*;
+use crate::raw::{Builtin, Container, ContainerID, Convert, OpaqueContainer};
+use crate::{Key, Reference};
 
-pub struct Image {
-    pub source: ImageSource,
-    pub tint_color: Option<Color>,
-}
-
-impl Container for UIImageView {
+impl Container for PLYImageView {
     fn mount(&mut self, child: &mut OpaqueContainer) {
         if let Some(view) = child.container().to_view() {
-            UIImageView::to_view(self).add_subview(&view)
+            PLYImageView::to_view(self).add_subview(&view)
         }
     }
 
     fn unmount(&mut self) {
-        UIImageView::to_view(self).remove_from_superview();
+        PLYImageView::to_view(self).remove_from_superview();
     }
 
-    fn to_view(&self) -> Option<UIView> {
-        Some(UIImageView::to_view(self))
+    fn to_view(&self) -> Option<PLYView> {
+        Some(PLYImageView::to_view(self))
     }
+}
+
+struct ConcreteImage {
+    image: Option<UIImage>,
+    size: Size<f32>,
 }
 
 impl Component for Image {
@@ -32,16 +37,31 @@ impl Component for Image {
         let view_ref_effect = view_ref.clone();
 
         let image_source = self.source.clone();
-        let tint_color = self.tint_color.clone();
-
-        let width = Dimension::Pixels(image_source.width() as f32);
-        let height = Dimension::Pixels(image_source.height() as f32);
+        let tint_color = self.style.image.tint_color.clone();
 
         use_effect!(manager, move |buffer| {
             let id = match view_ref_effect.as_copy() {
                 Some(id) => id,
                 None => return,
             };
+
+            let image = match image_source {
+                ImageSource::Asset(asset) => {
+                    let path = asset.package().to_owned() + "/" + asset.name();
+                    let image = UIImage::with_name(&path).unwrap();
+                    let size = Size::new(image.size().width as f32, image.size().height as f32);
+
+                    ConcreteImage {
+                        image: Some(image),
+                        size,
+                    }
+                }
+                ImageSource::Placeholder(size) => ConcreteImage { image: None, size },
+                _ => unimplemented!("Image sources backed by buffers are not yet implemented."),
+            };
+
+            let width = Dimension::Points(image.size.width);
+            let height = Dimension::Points(image.size.height);
 
             buffer.mutate(&[id], move |containers| {
                 let container = &mut containers[0];
@@ -51,16 +71,18 @@ impl Component for Image {
                     None => return,
                 };
 
-                layout.set_style(layout::Style {
-                    size: layout::Size { width, height },
+                layout.set_style(ViewStyle {
+                    size: Size { width, height },
                     ..Default::default()
                 });
 
-                if let Some(view) = container.downcast_mut::<UIImageView>() {
-                    view.set_image(&image_source.into());
+                if let Some(view) = container.downcast_mut::<PLYImageView>() {
+                    if let Some(image) = image.image.as_ref() {
+                        view.set_image(image);
+                    }
 
                     if let Some(tint_color) = tint_color {
-                        view.set_tint_color(&tint_color.into());
+                        view.set_tint_color(&tint_color.convert());
                     }
 
                     view.to_view().set_layout(move || {

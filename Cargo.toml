@@ -10,9 +10,14 @@ members = [
     "crates/polyhorn-ios-sys",
     "crates/polyhorn-layout",
     "crates/polyhorn-macros",
-    "crates/polyhorn-style",
+    "crates/polyhorn-ui",
+    "crates/polyhorn-ui-macros",
     "crates/taxi",
     "crates/yoyo",
     "crates/yoyo-macros",
     "crates/yoyo-physics",
+]
+
+exclude = [
+    "crates/polyhorn-cli",
 ]

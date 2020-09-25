@@ -1,14 +1,16 @@
 use polyhorn_channel::{use_channel, Sender};
 use polyhorn_core::CommandBuffer;
-use polyhorn_ios_sys as sys;
-use polyhorn_layout as layout;
+use polyhorn_ios_sys::polykit::PLYWindow;
+use polyhorn_ui::geometry::{Dimension, Size};
+use polyhorn_ui::hooks::SafeAreaInsets;
+use polyhorn_ui::styles::{FlexDirection, Position, Relative, ViewStyle};
 use std::rc::Rc;
 
-use crate::*;
+use crate::prelude::*;
+use crate::raw::{Builtin, Container, OpaqueContainer};
+use crate::Key;
 
-pub struct Window {}
-
-impl Container for sys::UIWindow {
+impl Container for PLYWindow {
     fn mount(&mut self, child: &mut OpaqueContainer) {
         if let Some(view) = child.container().to_view() {
             self.root_view_controller().view_mut().add_subview(&view)
@@ -20,39 +22,9 @@ impl Container for sys::UIWindow {
         // zero.
     }
 
-    fn to_window(&self) -> Option<sys::UIWindow> {
+    fn to_window(&self) -> Option<PLYWindow> {
         Some(self.clone())
     }
-}
-
-#[derive(Copy, Clone, Debug, Default, PartialEq)]
-pub struct SafeAreaInsets {
-    pub top: f32,
-    pub left: f32,
-    pub right: f32,
-    pub bottom: f32,
-}
-
-pub trait UseSafeAreaInsets {
-    fn use_safe_area_insets(&mut self) -> SafeAreaInsets;
-}
-
-impl<T> UseSafeAreaInsets for T
-where
-    T: UseContext,
-{
-    fn use_safe_area_insets(&mut self) -> SafeAreaInsets {
-        self.use_context()
-            .and_then(|context| context.to_owned())
-            .unwrap_or_default()
-    }
-}
-
-#[macro_export]
-macro_rules! use_safe_area_insets {
-    ($manager:expr) => {
-        $crate::hooks::UseSafeAreaInsets::use_safe_area_insets($manager)
-    };
 }
 
 impl Component for Window {
@@ -87,7 +59,7 @@ impl Component for Window {
             buffer.mutate(&[id], move |containers| {
                 let container = &mut containers[0];
 
-                let frame = match container.downcast_mut::<sys::UIWindow>() {
+                let frame = match container.downcast_mut::<PLYWindow>() {
                     Some(window) => {
                         let mut view_controller = window.root_view_controller();
                         let view = view_controller.view_mut();
@@ -110,20 +82,23 @@ impl Component for Window {
                     .view_mut()
                     .safe_area_insets();
 
-                let _ = channel.try_send(SafeAreaInsets {
-                    top: insets.top as _,
-                    left: insets.left as _,
-                    right: insets.right as _,
-                    bottom: insets.bottom as _,
-                });
+                let _ = channel.try_send(SafeAreaInsets::new(
+                    insets.top as _,
+                    insets.right as _,
+                    insets.bottom as _,
+                    insets.left as _,
+                ));
 
-                layout.set_style(layout::Style {
+                layout.set_style(ViewStyle {
+                    position: Position::Relative(Relative {
+                        flex_shrink: 0.0,
+                        flex_grow: 0.0,
+                        ..Default::default()
+                    }),
                     flex_direction: FlexDirection::Column,
-                    flex_shrink: 0.0,
-                    flex_grow: 0.0,
-                    size: layout::Size {
-                        width: Dimension::Pixels(frame.size.width as _),
-                        height: Dimension::Pixels(frame.size.height as _),
+                    size: Size {
+                        width: Dimension::Points(frame.size.width as _),
+                        height: Dimension::Points(frame.size.height as _),
                     },
                     ..Default::default()
                 });
@@ -137,10 +112,11 @@ impl Component for Window {
             Builtin::Window,
             Element::context(
                 Key::new(()),
-                Rc::new(insets.to_owned().unwrap_or(SafeAreaInsets {
-                    top: 20.0,
-                    ..Default::default()
-                })),
+                Rc::new(
+                    insets
+                        .to_owned()
+                        .unwrap_or(SafeAreaInsets::new(20.0, 0.0, 0.0, 0.0)),
+                ),
                 manager.children(),
             ),
             Some(reference),

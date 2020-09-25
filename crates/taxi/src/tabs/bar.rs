@@ -1,15 +1,20 @@
-use polyhorn::*;
+use polyhorn::prelude::*;
+use polyhorn_ui::color::Color;
+use polyhorn_ui::events::EventListener;
+use polyhorn_ui::styles::{Inherited, TextStyle, ViewStyle};
 
 pub struct TabBar {}
 
 impl Component for TabBar {
     fn render(&self, manager: &mut Manager) -> Element {
-        poly!(<View style={ style! {
-            flex_shrink: 0.0;
-            flex_direction: FlexDirection::Row;
-            background_color: Color::from_rgba(247, 247, 247, 0.8);
-            height: 83.px();
-            padding: (0.px(), 0.px(), 24.px(), 0.px());
+        poly!(<View style={ ViewStyle {
+            background_color: Color::rgba(247, 247, 247, 0.8),
+            ..style! {
+                flex-shrink: 0.0;
+                flex-direction: row;
+                height: 83px;
+                padding: 0px 0px 24px 0px;
+            }
         } } ...>
             { manager.children() }
         </View>)
@@ -26,26 +31,30 @@ pub struct TabBarItem {
 impl Component for TabBarItem {
     fn render(&self, _manager: &mut Manager) -> Element {
         let tint = if self.selected {
-            Color::from_hex(0x007AFF)
+            Color::hex(0x007AFF)
         } else {
-            Color::from_hex(0x8E8E93)
+            Color::hex(0x8E8E93)
         };
 
         poly!(<View style={ style! {
-            flex_grow: 1.0;
-            align_items: AlignItems::Center;
-            justify_content: JustifyContent::Center;
+            flex-grow: 1.0;
+            align-items: center;
+            justify-content: center;
         } } on_pointer_up={ self.on_press.clone() } ...>
-            <View style={ style! {
-                background_color: tint.clone();
-                border_radius: 2.px();
-                width: 28.px();
-                height: 28.px();
-                margin: (0.px(), 0.px(), 2.px(), 0.px());
+            <View style={ ViewStyle {
+                background_color: tint,
+                ..style! {
+                    // border_radius: 2.px();
+                    width: 28px;
+                    height: 28px;
+                    margin: 0px 0px 2px 0px;
+                }
             } } ... />
-            <Text style={ text_style! {
-                font: Font::system_font(10.0);
-                color: tint.clone();
+            <Text style={ TextStyle {
+                color: Inherited::Specified(tint),
+                ..style! {
+                    font-size: 10px;
+                }
             } }>
                 { self.title.clone() }
             </Text>

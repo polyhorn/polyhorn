@@ -1,28 +1,67 @@
 use polyhorn_core::CommandBuffer;
+use polyhorn_ios_sys::coregraphics::CGRect;
 use polyhorn_ios_sys::foundation::NSNumber;
-use polyhorn_ios_sys::{CGRect, UICallback, UIKeyboardAvoidingView, UIView};
-use polyhorn_layout as layout;
+use polyhorn_ios_sys::polykit::{PLYCallback, PLYKeyboardAvoidingView, PLYView};
+use polyhorn_ui::geometry::{ByEdge, Dimension};
+use polyhorn_ui::layout::LayoutAxisY;
+use polyhorn_ui::styles::{Position, Relative, ViewStyle};
 use std::sync::Arc;
 
-use crate::*;
+use crate::prelude::*;
+use crate::raw::{Builtin, Container, ContainerID, OpaqueContainer};
+use crate::{Key, Reference};
 
+/// Structure that contains all updates that should be made to a view's layout
+/// in response to a change in the visibility or dimensions of the system's
+/// virtual keyboard.
+#[derive(Default)]
+pub struct LayoutAdjustment {
+    margin: ByEdge<Dimension<f32>>,
+}
+
+impl LayoutAdjustment {
+    /// Returns a new and empty layout adjustment.
+    pub fn new() -> LayoutAdjustment {
+        Default::default()
+    }
+
+    /// Sets the margin bottom of this layout adjustment. Note that this will
+    /// be added to the existing margin of the view.
+    pub fn margin_bottom(self, bottom: Dimension<f32>) -> LayoutAdjustment {
+        LayoutAdjustment {
+            margin: ByEdge {
+                vertical: LayoutAxisY {
+                    bottom,
+                    ..self.margin.vertical
+                },
+                ..self.margin
+            },
+            ..self
+        }
+    }
+}
+
+/// A view that automatically adjusts its layout when the system keyboard
+/// appears, changes its dimensions or disappears.
 pub struct KeyboardAvoidingView {
+    /// Transformation function that should return a adjustment based on the
+    /// keyboard's height, that we apply to the layout of this view.
     pub transform: Arc<dyn Fn(f32) -> LayoutAdjustment + Send + Sync>,
 }
 
-impl Container for UIKeyboardAvoidingView {
+impl Container for PLYKeyboardAvoidingView {
     fn mount(&mut self, child: &mut OpaqueContainer) {
         if let Some(view) = child.container().to_view() {
-            UIKeyboardAvoidingView::to_view(self).add_subview(&view)
+            PLYKeyboardAvoidingView::to_view(self).add_subview(&view)
         }
     }
 
     fn unmount(&mut self) {
-        UIKeyboardAvoidingView::to_view(self).remove_from_superview();
+        PLYKeyboardAvoidingView::to_view(self).remove_from_superview();
     }
 
-    fn to_view(&self) -> Option<UIView> {
-        Some(UIKeyboardAvoidingView::to_view(self))
+    fn to_view(&self) -> Option<PLYView> {
+        Some(PLYKeyboardAvoidingView::to_view(self))
     }
 }
 
@@ -53,23 +92,32 @@ impl Component for KeyboardAvoidingView {
                 };
 
                 if is_first_render {
-                    layout.set_style(layout::Style {
-                        flex_grow: 1.0,
+                    layout.set_style(ViewStyle {
+                        position: Position::Relative(Relative {
+                            flex_grow: 1.0,
+                            ..Default::default()
+                        }),
                         ..Default::default()
                     });
                 }
 
-                if let Some(view) = container.downcast_mut::<UIKeyboardAvoidingView>() {
+                if let Some(view) = container.downcast_mut::<PLYKeyboardAvoidingView>() {
                     {
                         let layout = layout.clone();
 
-                        view.set_on_keyboard(UICallback::new(move |height: NSNumber| {
+                        view.set_on_keyboard(PLYCallback::new(move |height: NSNumber| {
                             let adjustment = transform(height.float_value());
 
-                            layout.set_style(layout::Style {
-                                flex_grow: 1.0,
-                                margin: layout::Insets {
-                                    bottom: adjustment.margin.bottom,
+                            layout.set_style(ViewStyle {
+                                position: Position::Relative(Relative {
+                                    flex_grow: 1.0,
+                                    ..Default::default()
+                                }),
+                                margin: ByEdge {
+                                    vertical: LayoutAxisY {
+                                        bottom: adjustment.margin.vertical.bottom,
+                                        ..Default::default()
+                                    },
                                     ..Default::default()
                                 },
                                 ..Default::default()

@@ -1,55 +1,52 @@
-use crate::style::Overflow;
-use polyhorn_style::{AlignItems, Dimension, FlexDirection, JustifyContent, Position};
+use polyhorn_ui::geometry::Dimension;
+use polyhorn_ui::styles::{Align, FlexDirection, Justify, Overflow};
 
 pub trait IntoYoga<T> {
     fn into_yoga(self) -> T;
-}
-
-impl IntoYoga<yoga::PositionType> for Position {
-    fn into_yoga(self) -> yoga::PositionType {
-        match self {
-            Position::Absolute => yoga::PositionType::Absolute,
-            Position::Relative => yoga::PositionType::Relative,
-        }
-    }
 }
 
 impl IntoYoga<yoga::FlexDirection> for FlexDirection {
     fn into_yoga(self) -> yoga::FlexDirection {
         match self {
             FlexDirection::Column => yoga::FlexDirection::Column,
+            FlexDirection::ColumnReverse => yoga::FlexDirection::ColumnReverse,
             FlexDirection::Row => yoga::FlexDirection::Row,
+            FlexDirection::RowReverse => yoga::FlexDirection::RowReverse,
         }
     }
 }
 
-impl IntoYoga<yoga::Align> for AlignItems {
+impl IntoYoga<yoga::Align> for Align {
     fn into_yoga(self) -> yoga::Align {
         match self {
-            AlignItems::Center => yoga::Align::Center,
-            AlignItems::Stretch => yoga::Align::Stretch,
-            AlignItems::FlexStart => yoga::Align::FlexStart,
-            AlignItems::FlexEnd => yoga::Align::FlexEnd,
+            Align::FlexStart => yoga::Align::FlexStart,
+            Align::Center => yoga::Align::Center,
+            Align::FlexEnd => yoga::Align::FlexEnd,
+            Align::Stretch => yoga::Align::Stretch,
+            Align::SpaceAround => yoga::Align::SpaceAround,
+            Align::SpaceBetween => yoga::Align::SpaceBetween,
         }
     }
 }
 
-impl IntoYoga<yoga::Justify> for JustifyContent {
+impl IntoYoga<yoga::Justify> for Justify {
     fn into_yoga(self) -> yoga::Justify {
         match self {
-            JustifyContent::Center => yoga::Justify::Center,
-            JustifyContent::FlexStart => yoga::Justify::FlexStart,
-            JustifyContent::FlexEnd => yoga::Justify::FlexEnd,
-            JustifyContent::SpaceBetween => yoga::Justify::SpaceBetween,
+            Justify::FlexStart => yoga::Justify::FlexStart,
+            Justify::Center => yoga::Justify::Center,
+            Justify::FlexEnd => yoga::Justify::FlexEnd,
+            Justify::SpaceAround => yoga::Justify::SpaceAround,
+            Justify::SpaceBetween => yoga::Justify::SpaceBetween,
+            Justify::SpaceEvenly => yoga::Justify::SpaceEvenly,
         }
     }
 }
 
-impl IntoYoga<yoga::StyleUnit> for Dimension {
+impl IntoYoga<yoga::StyleUnit> for Dimension<f32> {
     fn into_yoga(self) -> yoga::StyleUnit {
         match self {
-            Dimension::Pixels(pixels) => yoga::StyleUnit::Point(pixels.into()),
-            Dimension::Percent(percent) => yoga::StyleUnit::Percent((percent * 100.0).into()),
+            Dimension::Points(pixels) => yoga::StyleUnit::Point(pixels.into()),
+            Dimension::Percentage(percent) => yoga::StyleUnit::Percent((percent * 100.0).into()),
             Dimension::Auto => yoga::StyleUnit::Auto,
             Dimension::Undefined => yoga::StyleUnit::UndefinedValue,
         }
@@ -60,6 +57,7 @@ impl IntoYoga<yoga::Overflow> for Overflow {
     fn into_yoga(self) -> yoga::Overflow {
         match self {
             Overflow::Visible => yoga::Overflow::Visible,
+            Overflow::Hidden => yoga::Overflow::Hidden,
             Overflow::Scroll => yoga::Overflow::Scroll,
         }
     }

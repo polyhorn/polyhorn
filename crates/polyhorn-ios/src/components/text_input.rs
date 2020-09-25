@@ -1,28 +1,36 @@
 use polyhorn_core::CommandBuffer;
-use polyhorn_ios_sys::{CGRect, UITextInputView, UIView};
-use polyhorn_layout as layout;
+use polyhorn_ios_sys::coregraphics::CGRect;
+use polyhorn_ios_sys::polykit::{PLYTextInputView, PLYView};
+use polyhorn_ui::geometry::{Dimension, Size};
+use polyhorn_ui::styles::{TextStyle, ViewStyle};
 
-use crate::*;
+use crate::prelude::*;
+use crate::raw::{attributed_string, Builtin, Container, ContainerID, OpaqueContainer};
+use crate::{Key, Reference};
 
+/// Accepts user input.
 #[derive(Default)]
 pub struct TextInput {
-    pub placeholder_style: TextStyle,
+    /// Placeholder string to use when the text input is empty.
     pub placeholder: String,
+
+    /// Text style to apply to the placeholder string.
+    pub placeholder_style: TextStyle,
 }
 
-impl Container for UITextInputView {
+impl Container for PLYTextInputView {
     fn mount(&mut self, child: &mut OpaqueContainer) {
         if let Some(view) = child.container().to_view() {
-            UITextInputView::to_view(self).add_subview(&view)
+            PLYTextInputView::to_view(self).add_subview(&view)
         }
     }
 
     fn unmount(&mut self) {
-        UITextInputView::to_view(self).remove_from_superview();
+        PLYTextInputView::to_view(self).remove_from_superview();
     }
 
-    fn to_view(&self) -> Option<UIView> {
-        Some(UITextInputView::to_view(self))
+    fn to_view(&self) -> Option<PLYView> {
+        Some(PLYTextInputView::to_view(self))
     }
 }
 
@@ -48,18 +56,18 @@ impl Component for TextInput {
                     None => return,
                 };
 
-                layout.set_style(layout::Style {
-                    size: layout::Size {
-                        width: Dimension::Percent(1.0),
+                layout.set_style(ViewStyle {
+                    size: Size {
+                        width: Dimension::Percentage(1.0),
                         height: Dimension::Auto,
                     },
                     ..Default::default()
                 });
 
-                assert!(container.downcast_mut::<UITextInputView>().is_some());
+                assert!(container.downcast_mut::<PLYTextInputView>().is_some());
 
-                if let Some(view) = container.downcast_mut::<UITextInputView>() {
-                    view.set_attributed_placeholder(&markup::attributed_string(
+                if let Some(view) = container.downcast_mut::<PLYTextInputView>() {
+                    view.set_attributed_placeholder(&attributed_string(
                         &placeholder,
                         &placeholder_style,
                     ));

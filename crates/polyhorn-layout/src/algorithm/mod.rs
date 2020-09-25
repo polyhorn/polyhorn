@@ -4,19 +4,20 @@ pub mod stretch;
 #[cfg(feature = "impl-yoga")]
 pub mod yoga;
 
-use crate::{Layout, MeasureFunc, Size, Style};
-use polyhorn_style::Dimension;
-
+use polyhorn_ui::geometry::Dimension;
+use polyhorn_ui::styles::ViewStyle;
 use std::hash::Hash;
+
+use crate::{Layout, MeasureFunc, Size};
 
 pub trait Algorithm {
     type Node: Copy + Clone + Hash + Eq;
 
     fn new() -> Self;
 
-    fn new_node(&mut self, style: Style, children: &[Self::Node]) -> Self::Node;
+    fn new_node(&mut self, style: ViewStyle, children: &[Self::Node]) -> Self::Node;
 
-    fn new_leaf(&mut self, style: Style, measure: MeasureFunc) -> Self::Node;
+    fn new_leaf(&mut self, style: ViewStyle, measure: MeasureFunc) -> Self::Node;
 
     fn add_child(&mut self, parent: Self::Node, child: Self::Node);
 
@@ -26,11 +27,11 @@ pub trait Algorithm {
 
     fn remove(&mut self, node: Self::Node);
 
-    fn set_style(&mut self, node: Self::Node, style: Style);
+    fn set_style(&mut self, node: Self::Node, style: ViewStyle);
 
     fn set_measure(&mut self, node: Self::Node, measure: MeasureFunc);
 
-    fn compute_layout(&mut self, node: Self::Node, size: Size<Dimension>);
+    fn compute_layout(&mut self, node: Self::Node, size: Size<Dimension<f32>>);
 
     fn layout(&self, node: Self::Node) -> Layout;
 }

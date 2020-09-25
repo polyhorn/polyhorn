@@ -1,4 +1,7 @@
-use polyhorn::*;
+use polyhorn::hooks::UseContext;
+use polyhorn::prelude::*;
+use polyhorn::Context;
+use polyhorn_ui::events::EventListener;
 use std::rc::Rc;
 
 #[derive(Clone)]
@@ -6,11 +9,11 @@ pub struct Navigator<T>(Context<NavigationContext<T>>);
 
 impl<T> Navigator<T> {
     pub fn navigate(&self, screen: T) {
-        self.0.upgrade().unwrap().on_navigate.call(screen);
+        self.0.upgrade().unwrap().on_navigate.emit(screen);
     }
 
     pub fn pop(&self) {
-        self.0.upgrade().unwrap().on_pop.call(());
+        self.0.upgrade().unwrap().on_pop.emit(());
     }
 }
 
