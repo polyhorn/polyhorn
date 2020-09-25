@@ -1,0 +1,13 @@
+[package]
+name = "polyhorn-build"
+version = "0.1.0"
+authors = ["Tim <tim@glacyr.com>"]
+edition = "2018"
+license = "MIT"
+description = "Utilities for finding, compiling and linking native code with Polyhorn."
+repository = "https://github.com/polyhorn/polyhorn/tree/crates/polyhorn-build"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+polyhorn-build-ios = { path = "../polyhorn-build-ios", version = "0.1.0" }

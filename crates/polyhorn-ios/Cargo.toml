@@ -1,0 +1,27 @@
+[package]
+name = "polyhorn-ios"
+version = "0.1.0"
+authors = ["Tim <tim@glacyr.com>"]
+edition = "2018"
+license = "MIT"
+description = "Polyhorn for iOS."
+repository = "https://github.com/polyhorn/polyhorn/tree/crates/polyhorn-ios"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+as-any = "0.2.0"
+dispatch = "0.2.0"
+fsize = "0.1.0"
+futures = "0.3.5"
+lazy_static = "1.4.0"
+objc = "0.2.7"
+smart-default = "0.6.0"
+tokio = { version = "0.2.22", features = [ "stream", "sync" ] }
+
+polyhorn-channel = { path = "../polyhorn-channel", version = "0.1.0" }
+polyhorn-core = { path = "../polyhorn-core", version = "0.1.0" }
+polyhorn-layout = { path = "../polyhorn-layout", version = "0.1.0" }
+polyhorn-macros = { path = "../polyhorn-macros", version = "0.1.0" }
+polyhorn-ios-sys = { path = "../polyhorn-ios-sys", version = "0.1.0" }
+polyhorn-style = { path = "../polyhorn-style", version = "0.1.0" }

@@ -1,0 +1,4 @@
+[library]
+
+[ios]
+deployment-target = "8.0"

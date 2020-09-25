@@ -1,0 +1,26 @@
+[package]
+authors = ["Tim <tim@glacyr.com>"]
+edition = "2018"
+name = "polyhorn-cli"
+version = "0.1.0"
+license = "MIT"
+description = "Library with CLI for Polyhorn."
+repository = "https://github.com/polyhorn/polyhorn/tree/crates/polyhorn-cli"
+
+[lib]
+
+[dependencies]
+cargo_metadata = "0.11.2"
+clap = "=3.0.0-beta.1"
+clap_derive = "=3.0.0-beta.1"
+console = "0.11.3"
+dialoguer = "0.6.2"
+notify = "4.0.15"
+plist = "1.0.0"
+resvg = "0.11.0"
+serde = { version = "1.0.116", features = ["derive"] }
+serde_json = "1.0.57"
+serde_yaml = "0.8.13"
+smart-default = "0.6.0"
+toml = "0.5.6"
+usvg = "0.11.0"

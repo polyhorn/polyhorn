@@ -1,0 +1,16 @@
+[package]
+name = "polyhorn-macros"
+version = "0.1.0"
+authors = ["Tim <tim@glacyr.com>"]
+edition = "2018"
+license = "MIT"
+description = "Macros and parser for Polyhorn JSX-like syntax."
+repository = "https://github.com/polyhorn/polyhorn/tree/crates/polyhorn-macros"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[lib]
+proc-macro = true
+
+[dependencies]
+quote = "1.0.7"
+proc-macro2 = "1.0.19"

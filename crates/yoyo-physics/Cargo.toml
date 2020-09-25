@@ -1,0 +1,13 @@
+[package]
+name = "yoyo-physics"
+version = "0.1.0"
+authors = ["Tim <tim@glacyr.com>"]
+edition = "2018"
+license = "MIT"
+description = "Basic physics-based primitives used in Yoyo."
+repository = "https://github.com/polyhorn/polyhorn/tree/crates/yoyo-physics"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+num = "0.3.0"

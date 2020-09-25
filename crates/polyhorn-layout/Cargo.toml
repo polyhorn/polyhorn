@@ -1,0 +1,23 @@
+[package]
+name = "polyhorn-layout"
+version = "0.1.0"
+authors = ["Tim <tim@glacyr.com>"]
+edition = "2018"
+license = "MIT"
+description = "Abstraction over flexbox layout algorithms."
+repository = "https://github.com/polyhorn/polyhorn/tree/crates/polyhorn-layout"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[lib]
+
+[dependencies]
+stretch = { version = "0.3.2", optional = true }
+yoga = { package = "polyhorn-yoga", version = "0.3.2", optional = true }
+
+polyhorn-style = { path = "../polyhorn-style", version = "0.1.0" }
+
+[features]
+default = ["impl-yoga"]
+
+impl-yoga = ["yoga"]
+impl-stretch = ["stretch"]

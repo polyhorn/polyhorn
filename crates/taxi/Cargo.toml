@@ -1,0 +1,16 @@
+[package]
+name = "taxi"
+version = "0.1.0"
+authors = ["Tim <tim@glacyr.com>"]
+edition = "2018"
+license = "MIT"
+description = "Navigation library for Polyhorn."
+repository = "https://github.com/polyhorn/polyhorn/tree/crates/taxi"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[lib]
+
+[dependencies]
+polyhorn = { path = "../polyhorn", version = "0.1.1" }
+polyhorn-channel = { path = "../polyhorn-channel", version = "0.1.0" }
+yoyo = { path = "../yoyo", version = "0.1.1" }

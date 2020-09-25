@@ -1,0 +1,23 @@
+use polyhorn::*;
+
+pub struct App {{}}
+
+impl Component for App {{
+    fn render(&self, _manager: &mut Manager) -> Element {{
+        poly!(<Window>
+            <View style={{ style! {{
+                align_items: AlignItems::Center;
+                justify_content: JustifyContent::Center;
+            }} }} ...>
+                <Text style={{ text_style! {{ color: Color::white(); }} }}>
+                    "Welcome to your Polyhorn app!"
+                </Text>
+            </View>
+        </Window>)
+    }}
+}}
+
+#[no_mangle]
+unsafe extern "C" fn __polyhorn_main() {{
+    std::mem::forget(render(|| {{ poly!(<App />) }}, OpaqueContainer::root()));
+}}
