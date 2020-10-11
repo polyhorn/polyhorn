@@ -20,6 +20,7 @@ proc-macro2 = "1.0.24"
 quote = "1.0.7"
 strum = "0.19.2"
 strum_macros = "0.19.2"
+usvg = "0.11.0"
 
 casco = { version = "0.2.0", path = "../casco" }
 polyhorn-core = { version = "0.2.0", path = "../polyhorn-core" }

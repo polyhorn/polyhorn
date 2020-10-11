@@ -3,7 +3,7 @@
 #![warn(missing_docs)]
 
 pub use polyhorn_core::{render, Context, ContextProvider, Key, Reference, State};
-pub use polyhorn_ui::{color, font, geometry, layout, linalg, styles};
+pub use polyhorn_ui::{assets, color, font, geometry, layout, linalg, styles};
 
 pub mod components;
 pub mod handles;

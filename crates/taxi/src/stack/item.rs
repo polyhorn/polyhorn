@@ -1,5 +1,5 @@
 use polyhorn::prelude::*;
-use polyhorn_ui::assets::{ImageAsset, ImageSource};
+use polyhorn_ui::assets::ImageSource;
 use polyhorn_ui::color::Color;
 use polyhorn_ui::events::EventListener;
 use polyhorn_ui::styles::{ImageStyle, Inherited, TextAlign, TextStyle};
@@ -53,7 +53,7 @@ impl Component for NavigationItem {
                         align-items: center;
                         padding: 0px 12px;
                     } } on_pointer_up={ self.on_back_press.clone() } ...>
-                        <Image source={ ImageSource::Asset(ImageAsset::new("polyhorn-navigation", "back",  13.0, 21.0)) }
+                        <Image source={ ImageSource::Asset(asset!("back")) }
                                 style={ ImageStyle {
                             tint_color: Some(self.tint_color),
                             ..Default::default()
