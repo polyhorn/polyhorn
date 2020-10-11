@@ -144,7 +144,7 @@ where
     where
         T: FloatConst,
     {
-        let q = Quaternion3D::with_angle(angle.to_radians(), rx, ry, rz);
+        let q = Quaternion3D::with_angle(angle.to_radians(), -rx, -ry, rz);
         Transform {
             matrix: Transform3D::with_rotation(q),
             ..Default::default()
@@ -222,7 +222,7 @@ where
     pub fn concat(&self, other: Transform<T>) -> Option<Transform<T>> {
         match self.is_resolved() {
             true => Some(Transform {
-                matrix: self.matrix.multiply(other.matrix),
+                matrix: self.matrix.concat(other.matrix),
                 relative_translation: other.relative_translation,
             }),
             false => None,
@@ -235,7 +235,7 @@ where
         transforms
             .iter()
             .fold(Transform3D::identity(), |current, transform| {
-                current.multiply(transform.resolve(size))
+                current.concat(transform.resolve(size))
             })
     }
 }
@@ -323,7 +323,7 @@ mod tests {
                 .translate(160.0, 144.0, 20.0)
                 .rotate(Quaternion3D::with_angle(
                     Angle::with_degrees(45.0).to_radians(),
-                    1.0,
+                    -1.0,
                     0.0,
                     0.0
                 ))

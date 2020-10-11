@@ -266,24 +266,24 @@ where
         }
 
         // Apply rotation.
-        result = result.pre_rotate(self.quaternion);
+        result = result.rotate(self.quaternion);
 
         if !self.skew[2].is_zero() {
             let mut temp = Transform3D::identity();
             temp.columns[2][1] = self.skew[2];
-            result = result.pre_multiply(temp);
+            result = result.concat(temp);
         }
 
         if !self.skew[1].is_zero() {
             let mut temp = Transform3D::identity();
             temp.columns[2][0] = self.skew[1];
-            result = result.pre_multiply(temp);
+            result = result.concat(temp);
         }
 
         if !self.skew[0].is_zero() {
             let mut temp = Transform3D::identity();
             temp.columns[1][0] = self.skew[0];
-            result = result.pre_multiply(temp);
+            result = result.concat(temp);
         }
 
         // Apply scale.
@@ -406,8 +406,6 @@ mod tests {
 
         let decomposition = Decomposition3D::decompose(transform).unwrap();
 
-        // assert_eq!(decomposition.translation, [-20.0, 160.0, 10.0]);
-
         let distance = decomposition.quaternion.subtract(&Quaternion3D::with_angle(
             90.0 / 180.0 * PI,
             0.0,
@@ -420,9 +418,8 @@ mod tests {
 
     #[test]
     fn test_decomposition_2() {
-        let transform =
-            Transform3D::with_rotation(Quaternion3D::with_angle(90.0 / 180.0 * PI, 0.0, 0.0, 1.0))
-                .translate(160.0, 20.0, 10.0);
+        let transform = Transform3D::with_translation(160.0, 20.0, 10.0)
+            .rotate(Quaternion3D::with_angle(90.0 / 180.0 * PI, 0.0, 0.0, 1.0));
 
         let decomposition = Decomposition3D::decompose(transform).unwrap();
 
@@ -441,9 +438,8 @@ mod tests {
     #[test]
     fn test_interpolation() {
         let start = Transform3D::identity();
-        let end =
-            Transform3D::with_rotation(Quaternion3D::with_angle(90.0 / 180.0 * PI, 0.0, 0.0, 1.0))
-                .translate(160.0, 20.0, 10.0);
+        let end = Transform3D::with_translation(160.0, 20.0, 10.0)
+            .rotate(Quaternion3D::with_angle(90.0 / 180.0 * PI, 0.0, 0.0, 1.0));
 
         let start = Decomposition3D::decompose(start).unwrap();
         let end = Decomposition3D::decompose(end).unwrap();
@@ -464,17 +460,20 @@ mod tests {
         assert_eq!(
             interpolate(
                 Transform3D::identity(),
-                Transform3D::with_rotation(Quaternion3D::with_angle(
+                Transform3D::with_translation(160.0, 20.0, 10.0).rotate(Quaternion3D::with_angle(
                     90.0 / 180.0 * PI,
                     0.0,
                     0.0,
                     1.0
-                ))
-                .translate(160.0, 20.0, 10.0),
+                )),
                 0.5
             ),
-            Transform3D::with_rotation(Quaternion3D::with_angle(45.0 / 180.0 * PI, 0.0, 0.0, 1.0))
-                .translate(80.0, 10.0, 5.0)
+            Transform3D::with_translation(80.0, 10.0, 5.0).rotate(Quaternion3D::with_angle(
+                45.0 / 180.0 * PI,
+                0.0,
+                0.0,
+                1.0
+            ))
         );
     }
 }

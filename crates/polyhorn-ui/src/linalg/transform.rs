@@ -123,34 +123,14 @@ where
 
     /// Translates the given transformation matrix with the given offsets by
     /// concatenating the given matrix to a new translation matrix.
-    pub fn pre_translate(self, tx: T, ty: T, tz: T) -> Transform3D<T> {
-        self.pre_multiply(Self::with_translation(tx, ty, tz))
-    }
-
-    /// Scales the given transformation matrix with the given factors by
-    /// concatenating the given matrix to a new scale matrix.
-    pub fn pre_scale(self, sx: T, sy: T, sz: T) -> Transform3D<T> {
-        self.pre_multiply(Self::with_scale(sx, sy, sz))
-    }
-
-    /// Rotates the given transformation matrix with the given angle in radians
-    /// around the given vector. The rotation is counter-clockwise and if the
-    /// given vector is not unit, it will be normalized and the angle will be
-    /// multiplied with the length of the original vector.
-    pub fn pre_rotate(self, q: Quaternion3D<T>) -> Transform3D<T> {
-        self.pre_multiply(Self::with_rotation(q))
-    }
-
-    /// Translates the given transformation matrix with the given offsets by
-    /// concatenating the given matrix to a new translation matrix.
     pub fn translate(self, tx: T, ty: T, tz: T) -> Transform3D<T> {
-        self.multiply(Self::with_translation(tx, ty, tz))
+        self.concat(Self::with_translation(tx, ty, tz))
     }
 
     /// Scales the given transformation matrix with the given factors by
     /// concatenating the given matrix to a new scale matrix.
     pub fn scale(self, sx: T, sy: T, sz: T) -> Transform3D<T> {
-        self.multiply(Self::with_scale(sx, sy, sz))
+        self.concat(Self::with_scale(sx, sy, sz))
     }
 
     /// Rotates the given transformation matrix with the given angle in radians
@@ -158,12 +138,12 @@ where
     /// given vector is not unit, it will be normalized and the angle will be
     /// multiplied with the length of the original vector.
     pub fn rotate(self, q: Quaternion3D<T>) -> Transform3D<T> {
-        self.multiply(Self::with_rotation(q))
+        self.concat(Self::with_rotation(q))
     }
 
     /// Concatenates the given transformation matrix to the current
     /// transformation matrix.
-    pub fn multiply(self, other: Transform3D<T>) -> Transform3D<T> {
+    pub fn concat(self, other: Transform3D<T>) -> Transform3D<T> {
         macro_rules! dot {
             ($c:expr, $a:expr, $b:expr, $i:literal, $j:literal) => {
                 $c[$i][$j] = $a[$i][0] * $b[0][$j]
@@ -174,30 +154,24 @@ where
         }
 
         let mut columns = Self::identity().columns;
-        dot!(columns, self.columns, other.columns, 0, 0);
-        dot!(columns, self.columns, other.columns, 0, 1);
-        dot!(columns, self.columns, other.columns, 0, 2);
-        dot!(columns, self.columns, other.columns, 0, 3);
-        dot!(columns, self.columns, other.columns, 1, 0);
-        dot!(columns, self.columns, other.columns, 1, 1);
-        dot!(columns, self.columns, other.columns, 1, 2);
-        dot!(columns, self.columns, other.columns, 1, 3);
-        dot!(columns, self.columns, other.columns, 2, 0);
-        dot!(columns, self.columns, other.columns, 2, 1);
-        dot!(columns, self.columns, other.columns, 2, 2);
-        dot!(columns, self.columns, other.columns, 2, 3);
-        dot!(columns, self.columns, other.columns, 3, 0);
-        dot!(columns, self.columns, other.columns, 3, 1);
-        dot!(columns, self.columns, other.columns, 3, 2);
-        dot!(columns, self.columns, other.columns, 3, 3);
+        dot!(columns, other.columns, self.columns, 0, 0);
+        dot!(columns, other.columns, self.columns, 0, 1);
+        dot!(columns, other.columns, self.columns, 0, 2);
+        dot!(columns, other.columns, self.columns, 0, 3);
+        dot!(columns, other.columns, self.columns, 1, 0);
+        dot!(columns, other.columns, self.columns, 1, 1);
+        dot!(columns, other.columns, self.columns, 1, 2);
+        dot!(columns, other.columns, self.columns, 1, 3);
+        dot!(columns, other.columns, self.columns, 2, 0);
+        dot!(columns, other.columns, self.columns, 2, 1);
+        dot!(columns, other.columns, self.columns, 2, 2);
+        dot!(columns, other.columns, self.columns, 2, 3);
+        dot!(columns, other.columns, self.columns, 3, 0);
+        dot!(columns, other.columns, self.columns, 3, 1);
+        dot!(columns, other.columns, self.columns, 3, 2);
+        dot!(columns, other.columns, self.columns, 3, 3);
 
         Transform3D { columns }
-    }
-
-    /// Short hand to multiply matrices in reverse order (which is called
-    /// pre-multiplication in the graphics industry).
-    pub fn pre_multiply(self, other: Transform3D<T>) -> Transform3D<T> {
-        other.multiply(self)
     }
 
     /// Applies the given transformation matrix to a point.

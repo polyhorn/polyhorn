@@ -2,7 +2,7 @@
 
 use num_traits::{Float, FloatConst};
 use std::fmt::{Debug, Formatter, Result};
-use std::ops::{Add, Div, Sub};
+use std::ops::{Add, Div, Neg, Sub};
 use std::time::Duration;
 
 /// Represents dy/dt. This type is mostly used for events that involve movement,
@@ -89,6 +89,19 @@ where
     fn sub(self, rhs: &Angle<T>) -> Self::Output {
         Angle {
             radians: self.radians - rhs.radians,
+        }
+    }
+}
+
+impl<T> Neg for Angle<T>
+where
+    T: Neg,
+{
+    type Output = Angle<T::Output>;
+
+    fn neg(self) -> Self::Output {
+        Angle {
+            radians: self.radians.neg(),
         }
     }
 }
