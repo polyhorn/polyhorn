@@ -8,7 +8,7 @@ impl Component for StatusBar {
     fn render(&self, manager: &mut Manager) -> Element {
         let style = self.style;
 
-        use_effect!(manager, move |buffer| {
+        use_effect!(manager, move |_, buffer| {
             buffer.mutate(&[], move |_| {
                 let window = PLYWindow::key_window();
                 let mut status_bar = PLYStatusBar::new(&window);

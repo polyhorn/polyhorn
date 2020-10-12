@@ -1,18 +1,19 @@
-use futures::channel::mpsc;
-use futures::StreamExt;
+use polyhorn_channel::use_channel;
 use polyhorn_core::CommandBuffer as _;
 use polyhorn_ios_sys::coregraphics::CGRect;
-use polyhorn_ios_sys::polykit::{PLYCallback, PLYView};
+use polyhorn_ios_sys::polykit::{PLYCallback, PLYLayoutEvent, PLYView};
+use polyhorn_ui::geometry::Size;
 
 use crate::handles::ViewHandle;
 use crate::prelude::*;
 use crate::raw::{Apply, Builtin, Container, ContainerID, OpaqueContainer};
-use crate::{Key, Reference};
+use crate::{Key, Platform, Reference};
 
 pub enum Message {
     PointerDown,
     PointerCancel,
     PointerUp,
+    Layout(CGRect),
 }
 
 impl Container for PLYView {
@@ -38,66 +39,64 @@ impl Container for PLYView {
 
 /// Specializes the generic View component with the iOS-specific concrete
 /// view handle.
-pub type View = polyhorn_ui::components::View<ViewHandle>;
+pub type View = polyhorn_ui::components::View<Platform, ViewHandle>;
 
 impl Component for View {
     fn render(&self, manager: &mut Manager) -> Element {
-        let view_ref: Reference<ContainerID> = use_reference!(manager);
-        let view_ref_effect = view_ref.clone();
+        let view_ref: Reference<Option<ContainerID>> = use_reference!(manager, None);
         let style = self.style;
 
-        let tx = use_reference!(manager);
-        let mut rx = None;
-
-        if tx.is_none() {
-            let (new_tx, new_rx) = mpsc::channel::<Message>(1024);
-            rx = Some(new_rx);
-
-            tx.replace(new_tx);
+        if let Some(reference) = self.reference.as_ref() {
+            reference.replace(Some(ViewHandle {
+                compositor: manager.compositor().clone(),
+                container_id: view_ref.weak(manager),
+            }));
         }
 
-        let tx = tx.to_owned().unwrap();
+        let on_pointer_cancel_ref = use_reference!(manager, self.on_pointer_cancel.clone());
+        on_pointer_cancel_ref.replace(manager, self.on_pointer_cancel.clone());
+        let on_pointer_cancel_ref = on_pointer_cancel_ref.weak(manager);
 
-        let on_pointer_cancel_ref = use_reference!(manager);
-        on_pointer_cancel_ref.replace(self.on_pointer_cancel.clone());
+        let on_pointer_down_ref = use_reference!(manager, self.on_pointer_down.clone());
+        on_pointer_down_ref.replace(manager, self.on_pointer_down.clone());
+        let on_pointer_down_ref = on_pointer_down_ref.weak(manager);
 
-        let on_pointer_down_ref = use_reference!(manager);
-        on_pointer_down_ref.replace(self.on_pointer_down.clone());
+        let on_pointer_up_ref = use_reference!(manager, self.on_pointer_up.clone());
+        on_pointer_up_ref.replace(manager, self.on_pointer_up.clone());
+        let on_pointer_up_ref = on_pointer_up_ref.weak(manager);
 
-        let on_pointer_up_ref = use_reference!(manager);
-        on_pointer_up_ref.replace(self.on_pointer_up.clone());
+        let on_layout_ref = use_reference!(manager, self.on_layout.clone());
+        on_layout_ref.replace(manager, self.on_layout.clone());
+        let on_layout_ref = on_layout_ref.weak(manager);
 
-        self.reference.replace(ViewHandle {
-            compositor: manager.compositor().clone(),
-            container_id: view_ref.clone(),
-        });
-
-        use_async!(manager, async move {
-            if let Some(mut rx) = rx {
+        let tx = use_channel!(manager, move |mut rx| {
+            async move {
                 while let Some(message) = rx.next().await {
                     match message {
                         Message::PointerCancel => {
-                            if let Some(on_pointer_cancel) = on_pointer_cancel_ref.to_owned() {
-                                on_pointer_cancel.emit(());
-                            }
+                            on_pointer_cancel_ref.apply(|listener| listener.emit(()));
                         }
                         Message::PointerDown => {
-                            if let Some(on_pointer_down) = on_pointer_down_ref.to_owned() {
-                                on_pointer_down.emit(());
-                            }
+                            on_pointer_down_ref.apply(|listener| listener.emit(()));
                         }
                         Message::PointerUp => {
-                            if let Some(on_pointer_up) = on_pointer_up_ref.to_owned() {
-                                on_pointer_up.emit(());
-                            }
+                            on_pointer_up_ref.apply(|listener| listener.emit(()));
+                        }
+                        Message::Layout(frame) => {
+                            on_layout_ref.apply(|listener| {
+                                listener.emit(Size {
+                                    width: frame.size.width as _,
+                                    height: frame.size.height as _,
+                                })
+                            });
                         }
                     }
                 }
             }
         });
 
-        use_effect!(manager, move |buffer| {
-            let id = match view_ref_effect.as_copy() {
+        use_effect!(manager, move |link, buffer| {
+            let id = match view_ref.apply(link, |view| view.to_owned()) {
                 Some(id) => id,
                 None => return,
             };
@@ -149,6 +148,14 @@ impl Component for View {
                             let _ = tx.try_send(Message::PointerUp);
                         }));
                     }
+
+                    {
+                        let mut tx = tx.clone();
+
+                        view.set_on_layout(PLYCallback::new(move |event: PLYLayoutEvent| {
+                            let _ = tx.try_send(Message::Layout(event.frame()));
+                        }));
+                    }
                 }
             });
         });
@@ -157,7 +164,7 @@ impl Component for View {
             Key::new(()),
             Builtin::View,
             manager.children(),
-            Some(view_ref),
+            Some(view_ref.weak(manager)),
         )
     }
 }

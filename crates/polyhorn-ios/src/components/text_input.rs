@@ -36,14 +36,13 @@ impl Container for PLYTextInputView {
 
 impl Component for TextInput {
     fn render(&self, manager: &mut Manager) -> Element {
-        let view_ref: Reference<ContainerID> = use_reference!(manager);
-        let view_ref_effect = view_ref.clone();
+        let view_ref: Reference<Option<ContainerID>> = use_reference!(manager, None);
 
         let placeholder = self.placeholder.clone();
         let placeholder_style = self.placeholder_style.clone();
 
-        use_effect!(manager, move |buffer| {
-            let id = match view_ref_effect.as_copy() {
+        use_effect!(manager, move |link, buffer| {
+            let id = match view_ref.apply(link, |&mut id| id) {
                 Some(id) => id,
                 None => return,
             };
@@ -90,7 +89,7 @@ impl Component for TextInput {
             Key::new(()),
             Builtin::TextInput,
             manager.children(),
-            Some(view_ref),
+            Some(view_ref.weak(manager)),
         )
     }
 }

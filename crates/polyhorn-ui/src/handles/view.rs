@@ -8,11 +8,15 @@ pub trait ViewHandle: Animatable {
     /// TODO: on what thread does this occur?
     fn layout_guide(&self) -> LayoutGuide<f32>;
 
+    fn size<F>(&self, callback: F)
+    where
+        F: FnOnce(Size<f32>) + Send + 'static;
+
     /// This function should call the given callback with the size of this view.
     /// Explicitly passing a command buffer ensures that the dimensions are
     /// measured in the same UI event loop iteration as the current render
     /// itself.
-    fn size_with_buffer<F>(&mut self, buffer: &mut Self::CommandBuffer, callback: F)
+    fn size_with_buffer<F>(&self, buffer: &mut Self::CommandBuffer, callback: F)
     where
         F: FnOnce(Size<f32>) + Send + 'static;
 }

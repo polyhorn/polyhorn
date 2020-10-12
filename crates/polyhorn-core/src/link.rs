@@ -1,46 +1,14 @@
-use super::{Instance, Platform};
-use std::rc::Weak;
+use std::rc::Rc;
 
-pub struct Link<P>
-where
-    P: Platform + ?Sized,
-{
-    instance: Weak<Instance<P>>,
-}
+use super::{Instance, Memory, Platform};
 
-impl<P> Clone for Link<P>
-where
-    P: Platform + ?Sized,
-{
-    fn clone(&self) -> Self {
-        Link {
-            instance: self.instance.clone(),
-        }
-    }
-}
+pub trait Link {
+    type Platform: Platform + ?Sized;
 
-impl<P> Link<P>
-where
-    P: Platform + ?Sized,
-{
-    pub fn new(instance: Weak<Instance<P>>) -> Link<P> {
-        Link { instance }
-    }
-}
+    fn instance(&self) -> &Rc<Instance<Self::Platform>>;
+    fn memory(&self) -> &Memory;
 
-pub trait Trigger: 'static {
-    fn trigger(&self);
-}
-
-impl<P> Trigger for Link<P>
-where
-    P: Platform + ?Sized,
-{
-    fn trigger(&self) {
-        if let Some(instance) = self.instance.clone().upgrade() {
-            // TODO: we should queue a rerender in the render thread instance of
-            // doing it here.
-            instance.renderer().rerender(&instance);
-        }
+    fn queue_rerender(&self) {
+        self.instance().renderer().queue_rerender(self.instance())
     }
 }

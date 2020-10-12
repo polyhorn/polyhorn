@@ -14,15 +14,17 @@ impl Component for ModalContainer {
         let is_present = presence.is_present();
         let safe_to_remove = presence.safe_to_remove();
 
-        let dismissed = use_reference!(manager);
+        let dismissed = use_reference!(manager, false);
 
-        if !is_present && dismissed.is_some() {
+        if !is_present && dismissed.apply(manager, |&mut value| value) {
             safe_to_remove.invoke();
         }
 
+        let dismissed = dismissed.weak(manager);
+
         let on_dismiss = self.on_dismiss.clone();
         let on_dismiss = move |event| {
-            dismissed.replace(());
+            dismissed.replace(true);
 
             if is_present {
                 on_dismiss.emit(event);

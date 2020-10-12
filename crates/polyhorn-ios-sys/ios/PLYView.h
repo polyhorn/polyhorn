@@ -5,6 +5,7 @@
 #import "PLYGeometry.h"
 #import "PLYKeyframeAnimation.h"
 #import "PLYLayout.h"
+#import "PLYLayoutEvent.h"
 
 @interface PLYView : UIView
 
@@ -22,5 +23,6 @@
 @property (nonatomic, strong, nullable) PLYCallback *onPointerCancel;
 @property (nonatomic, strong, nullable) PLYCallback *onPointerDown;
 @property (nonatomic, strong, nullable) PLYCallback *onPointerUp;
+@property (nonatomic, strong, nullable) PLYCallback<PLYLayoutEvent *> *onLayout;
 
 @end

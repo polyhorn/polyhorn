@@ -47,39 +47,27 @@ where
     pub fn adjust_style(
         &self,
         manager: &mut Manager,
+        bounds: Reference<Size<f32>>,
         is_present: bool,
-        reference: &Reference<<polyhorn::prelude::View as Imperative>::Handle>,
+        reference: Reference<Option<<polyhorn::prelude::View as Imperative>::Handle>>,
     ) -> ViewStyle {
-        let bounds = use_reference!(manager);
+        // let bounds = use_reference!(manager, Default::default());
+        // let weak_bounds = bounds.weak(manager);
 
-        let bounds_sender = use_channel!(
-            manager,
-            with!((bounds), |mut receiver| {
-                async move {
-                    while let Some(value) = receiver.next().await {
-                        bounds.replace(value);
-                    }
-                }
-            })
-        );
+        // let mut bounds_sender = use_channel!(manager, move |mut receiver| {
+        //     async move {
+        //         while let Some(value) = receiver.next().await {
+        //             weak_bounds.replace(value);
+        //             eprintln!(
+        //                 "Updated bounds: {:#?}, value: {:#?}",
+        //                 weak_bounds.apply(|&mut bounds| bounds),
+        //                 value
+        //             );
+        //         }
+        //     }
+        // });
 
-        if is_present {
-            use_effect!(
-                manager,
-                with!((reference, bounds_sender), |buffer| {
-                    let mut reference = reference;
-                    let mut bounds_sender = bounds_sender;
-
-                    reference.apply(|view| {
-                        view.size_with_buffer(buffer, move |bounds| {
-                            let _ = bounds_sender.try_send(bounds);
-                        })
-                    });
-                })
-            );
-        }
-
-        let bounds = bounds.to_owned().unwrap_or_default();
+        let bounds = bounds.apply(manager, |&mut bounds| bounds);
 
         let position = if is_present {
             self.style.position
@@ -116,18 +104,11 @@ where
     fn render(&self, manager: &mut Manager) -> Element {
         let presence = self.presence.as_ref();
 
-        let reference = use_reference!(manager);
-        let mut state = use_reference!(manager);
-        let marker = use_state!(manager, ());
+        let bounds = use_reference!(manager, Default::default());
 
-        let is_press = use_state!(manager, false);
+        let reference = use_reference!(manager, None);
 
-        let is_present = presence
-            .map(|presence| presence.is_present())
-            .unwrap_or(true);
-        let safe_to_remove = presence.map(|presence| presence.safe_to_remove());
-
-        if state.is_none() {
+        let state = use_reference!(manager, {
             let variant = match presence {
                 Some(presence) if !presence.is_animated() => self.variant,
                 _ => T::initial(),
@@ -136,7 +117,7 @@ where
             // TODO: this size is not accurate.
             let size = Size::default();
 
-            state.replace(State {
+            State {
                 variant,
                 opacity: Arc::new(RwLock::new(PropertyState {
                     value: variant.style().opacity,
@@ -146,11 +127,18 @@ where
                     value: Transform::squash(variant.style().transform, size),
                     animation: None,
                 })),
-            });
-        }
+            }
+        });
+
+        let is_press = use_state!(manager, false);
+
+        let is_present = presence
+            .map(|presence| presence.is_present())
+            .unwrap_or(true);
+        let safe_to_remove = presence.map(|presence| presence.safe_to_remove());
 
         let variant = if is_present {
-            if is_press.to_owned() {
+            if *is_press.get(manager) {
                 T::press().unwrap_or(self.variant)
             } else {
                 self.variant
@@ -183,50 +171,43 @@ where
             }
         });
 
-        let refresh = use_channel!(
-            manager,
-            with!((marker), |mut receiver: Receiver<()>| {
-                async move {
-                    while let Some(_) = receiver.next().await {
-                        marker.replace(());
-                    }
+        let marker = use_state!(manager, ()).weak(manager);
+
+        let refresh = use_channel!(manager, move |mut receiver: Receiver<()>| {
+            async move {
+                while let Some(_) = receiver.next().await {
+                    marker.replace(());
                 }
-            })
-        );
+            }
+        });
 
-        use_effect!(
-            manager,
-            with!((reference, state, marker), |buffer| {
-                let mut reference = reference;
-                let mut state = state;
+        use_effect!(manager, move |link, buffer| {
+            state.apply(link, move |state| {
+                if state.variant == variant {
+                    return;
+                }
 
-                state.apply(move |state| {
-                    if state.variant == variant {
-                        return;
+                reference.apply(link, move |animatable| {
+                    if let Some(animatable) = animatable {
+                        let handle = TransitionHandle { buffer, animatable };
+
+                        let context = TransitionContext {
+                            previous: state.variant,
+                            next: variant,
+                            is_present,
+                            wait_for_removal,
+                            refresh,
+                        };
+
+                        state.transition(handle, context);
                     }
-
-                    reference.apply(
-                        move |animatable: &mut <polyhorn::prelude::View as Imperative>::Handle| {
-                            let handle = TransitionHandle { buffer, animatable };
-
-                            let context = TransitionContext {
-                                previous: state.variant,
-                                next: variant,
-                                is_present,
-                                wait_for_removal,
-                                refresh,
-                            };
-
-                            state.transition(handle, context);
-                        },
-                    );
                 });
-            })
-        );
+            });
+        });
 
         let on_pointer_cancel = self.on_pointer_cancel.clone();
-        let on_pointer_cancel = with!((is_press), |event| {
-            is_press.replace(false);
+        let on_pointer_cancel = manager.bind(move |link, event| {
+            is_press.replace(link, false);
 
             if is_present {
                 on_pointer_cancel.emit(event);
@@ -234,8 +215,8 @@ where
         });
 
         let on_pointer_down = self.on_pointer_down.clone();
-        let on_pointer_down = with!((is_press), |event| {
-            is_press.replace(true);
+        let on_pointer_down = manager.bind(move |link, event| {
+            is_press.replace(link, true);
 
             if is_present {
                 on_pointer_down.emit(event);
@@ -243,38 +224,50 @@ where
         });
 
         let on_pointer_up = self.on_pointer_up.clone();
-        let on_pointer_up = with!((is_press), |event| {
-            is_press.replace(false);
+        let on_pointer_up = manager.bind(move |link, event| {
+            is_press.replace(link, false);
 
             if is_present {
                 on_pointer_up.emit(event);
             }
         });
 
+        let opacity = state.get(manager).opacity.read().unwrap().value.to_owned();
+        let transform = [
+            Transform::with_transform(
+                state
+                    .get(manager)
+                    .transform
+                    .read()
+                    .unwrap()
+                    .value
+                    .to_owned(),
+            ),
+            Default::default(),
+            Default::default(),
+            Default::default(),
+            Default::default(),
+            Default::default(),
+            Default::default(),
+            Default::default(),
+        ];
+
+        let on_layout = manager.bind(move |link, size| {
+            bounds.replace(link, size);
+        });
+
         let style = ViewStyle {
-            opacity: state
-                .apply(|state| state.opacity.read().unwrap().value)
-                .unwrap(),
-            transform: [
-                Transform::with_transform(
-                    state
-                        .apply(|state| state.transform.read().unwrap().value)
-                        .unwrap(),
-                ),
-                Default::default(),
-                Default::default(),
-                Default::default(),
-                Default::default(),
-                Default::default(),
-                Default::default(),
-                Default::default(),
-            ],
-            ..self.adjust_style(manager, is_present, &reference)
+            opacity,
+            transform,
+            ..self.adjust_style(manager, bounds, is_present, reference)
         };
+
+        let reference = reference.weak(manager);
 
         poly!(<polyhorn::prelude::View reference=reference style=style
                                on_pointer_cancel={ on_pointer_cancel }
                                  on_pointer_down={ on_pointer_down }
+                                     on_layout={ on_layout }
                                    on_pointer_up={ on_pointer_up } ...>
             { manager.children() }
         </polyhorn::prelude::View>)

@@ -1,6 +1,7 @@
-use super::{Context, Key, Platform, Reference, State};
 use serde::{Deserialize, Serialize};
 use std::future::Future;
+
+use super::{Context, EffectLink, Key, Platform, Reference, State};
 
 #[macro_export]
 macro_rules! use_id {
@@ -27,15 +28,16 @@ macro_rules! use_state {
 }
 
 pub trait UseReference {
-    fn use_reference<R>(&mut self, key: Key) -> Reference<R>
+    fn use_reference<R, I>(&mut self, key: Key, initializer: I) -> Reference<R>
     where
-        R: 'static;
+        R: 'static,
+        I: FnOnce() -> R;
 }
 
 #[macro_export]
 macro_rules! use_reference {
-    ($manager:expr) => {
-        $crate::UseReference::use_reference($manager, $crate::use_id!().into())
+    ($manager:expr, $value:expr) => {
+        $crate::UseReference::use_reference($manager, $crate::use_id!().into(), || $value)
     };
 }
 
@@ -45,7 +47,7 @@ where
 {
     fn use_effect<F>(&mut self, key: Key, conditions: Option<Key>, effect: F)
     where
-        F: FnOnce(&mut P::CommandBuffer) + 'static;
+        F: FnOnce(&EffectLink<P>, &mut P::CommandBuffer) + 'static;
 }
 
 #[macro_export]

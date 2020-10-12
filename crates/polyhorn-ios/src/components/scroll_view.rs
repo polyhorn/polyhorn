@@ -26,13 +26,12 @@ impl Container for PLYScrollView {
 
 impl Component for Scrollable {
     fn render(&self, manager: &mut Manager) -> Element {
-        let view_ref = use_reference!(manager);
+        let view_ref = use_reference!(manager, None);
 
-        let view_ref_effect = view_ref.clone();
         let style = self.style;
 
-        use_effect!(manager, move |buffer| {
-            let id = match view_ref_effect.as_copy() {
+        use_effect!(manager, move |link, buffer| {
+            let id = match view_ref.apply(link, |view| view.to_owned()) {
                 Some(id) => id,
                 None => return,
             };
@@ -102,7 +101,7 @@ impl Component for Scrollable {
             Key::new(()),
             Builtin::ScrollView,
             manager.children(),
-            Some(view_ref),
+            Some(view_ref.weak(manager)),
         )
     }
 }

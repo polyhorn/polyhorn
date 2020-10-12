@@ -61,6 +61,9 @@
     [super layoutSubviews];
     
     [self updateLayout];
+
+    CGRect bounds = [self convertRect:self.frame toView:nil];
+    [self.onLayout callWithArgument:[[PLYLayoutEvent alloc] initWithFrame:bounds]];
 }
 
 - (void)setOpaqueBackgroundColor:(UIColor *)color {

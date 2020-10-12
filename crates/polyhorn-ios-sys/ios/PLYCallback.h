@@ -1,7 +1,7 @@
 #import <Foundation/Foundation.h>
 
-@interface PLYCallback : NSObject
+@interface PLYCallback<ObjectType> : NSObject
 
-- (void)callWithArgument:(id)argument;
+- (void)callWithArgument:(ObjectType)argument;
 
 @end

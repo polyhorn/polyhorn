@@ -28,7 +28,7 @@ where
     T: Raw,
 {
     fn invoke(&mut self, object: *mut Object) {
-        (self.closure)(unsafe { T::from_raw(object) })
+        (self.closure)(unsafe { T::from_raw_retain(object) })
     }
 }
 

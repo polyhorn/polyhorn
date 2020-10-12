@@ -1,7 +1,8 @@
-use super::{Builtin, Key, Platform, Reference};
 use std::any::Any;
 use std::rc::Rc;
 use std::sync::Arc;
+
+use super::{Builtin, Key, Platform, WeakReference};
 
 pub struct ElementBuiltin<P>
 where
@@ -10,7 +11,7 @@ where
     pub key: Key,
     pub builtin: Arc<dyn Builtin<P>>,
     pub children: Box<Element<P>>,
-    pub reference: Option<Reference<P::ContainerID>>,
+    pub reference: Option<WeakReference<P, Option<P::ContainerID>>>,
 }
 
 impl<P> Clone for ElementBuiltin<P>
@@ -120,7 +121,7 @@ where
         key: Key,
         builtin: impl Builtin<P> + 'static,
         children: Element<P>,
-        reference: Option<Reference<P::ContainerID>>,
+        reference: Option<WeakReference<P, Option<P::ContainerID>>>,
     ) -> Element<P> {
         let builtin = Arc::new(builtin);
         let children = Box::new(children);

@@ -1,13 +1,15 @@
-use polyhorn_core::Reference;
+use polyhorn_core::{Platform, WeakReference};
 
 use crate::events::EventListener;
+use crate::geometry::Size;
 use crate::handles::{Imperative, ViewHandle};
 use crate::styles::ViewStyle;
 
 /// The base component.
-pub struct View<H>
+pub struct View<P, H>
 where
-    H: ViewHandle,
+    P: Platform + ?Sized,
+    H: ViewHandle + 'static,
 {
     /// Controls the appearance and layout of a View.
     pub style: ViewStyle,
@@ -21,13 +23,16 @@ where
     /// Called when the user stops pressing a View.
     pub on_pointer_up: EventListener<()>,
 
+    pub on_layout: EventListener<Size<f32>>,
+
     /// This is a reference to an imperative view handle that can be used to
     /// measure the dimensions of this view or schedule animations.
-    pub reference: Reference<H>,
+    pub reference: Option<WeakReference<P, Option<H>>>,
 }
 
-impl<H> Default for View<H>
+impl<P, H> Default for View<P, H>
 where
+    P: Platform + ?Sized,
     H: ViewHandle,
 {
     fn default() -> Self {
@@ -36,13 +41,15 @@ where
             on_pointer_cancel: Default::default(),
             on_pointer_down: Default::default(),
             on_pointer_up: Default::default(),
+            on_layout: Default::default(),
             reference: Default::default(),
         }
     }
 }
 
-impl<H> Imperative for View<H>
+impl<P, H> Imperative for View<P, H>
 where
+    P: Platform + ?Sized,
     H: ViewHandle,
 {
     type Handle = H;

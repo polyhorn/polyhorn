@@ -1,70 +1,87 @@
-use std::cell::RefCell;
-use std::rc::{Rc, Weak};
+use std::cell::{Ref, RefMut};
+use std::marker::PhantomData;
+
+use super::{Link, Weak, WeakReference};
 
 pub struct Reference<T> {
-    current: Weak<RefCell<Option<T>>>,
+    instance_id: usize,
+    reference_id: usize,
+    marker: PhantomData<T>,
 }
 
-impl<T> Reference<T> {
-    pub fn new(value: &Rc<RefCell<Option<T>>>) -> Reference<T> {
+impl<T> Reference<T>
+where
+    T: 'static,
+{
+    pub(crate) fn new(instance_id: usize, reference_id: usize) -> Reference<T> {
         Reference {
-            current: Rc::downgrade(value),
+            instance_id,
+            reference_id,
+            marker: PhantomData,
         }
     }
 
-    pub fn is_none(&self) -> bool {
-        !self.is_some()
-    }
-
-    pub fn is_some(&self) -> bool {
-        self.current
-            .upgrade()
-            .map(|value| value.borrow().is_some())
-            .unwrap_or_default()
-    }
-
-    pub fn as_copy(&self) -> Option<T>
+    pub fn get<'a, L>(&self, link: &'a L) -> Ref<'a, T>
     where
-        T: Copy,
+        L: Link,
     {
-        *self.current.upgrade().unwrap().borrow()
+        assert_eq!(self.instance_id, link.instance().id);
+
+        Ref::map(link.memory().reference(self.reference_id), |reference| {
+            reference.downcast_ref().unwrap()
+        })
     }
 
-    pub fn to_owned(&self) -> Option<T>
+    pub fn replace<L>(&self, link: &L, value: T) -> T
     where
-        T: Clone,
+        L: Link,
     {
-        self.current.upgrade()?.borrow().clone()
+        assert_eq!(self.instance_id, link.instance().id);
+
+        let reference = link.memory().reference_mut(self.reference_id);
+        let mut reference = RefMut::map(reference, |reference| reference.downcast_mut().unwrap());
+        std::mem::replace(&mut reference, value)
     }
 
-    pub fn replace(&self, value: T) -> Option<T> {
-        self.current.upgrade()?.borrow_mut().replace(value)
-    }
-
-    pub fn take(&self) -> Option<T> {
-        self.current.upgrade()?.borrow_mut().take()
-    }
-
-    pub fn apply<F, R>(&mut self, apply: F) -> Option<R>
+    pub fn apply<L, F, O>(&self, link: &L, op: F) -> O
     where
-        F: FnOnce(&mut T) -> R,
+        L: Link,
+        F: FnOnce(&mut T) -> O,
     {
-        Some(apply(self.current.upgrade()?.borrow_mut().as_mut()?))
+        assert_eq!(self.instance_id, link.instance().id);
+
+        let reference = link.memory().reference_mut(self.reference_id);
+        let mut reference = RefMut::map(reference, |reference| reference.downcast_mut().unwrap());
+        op(&mut reference)
+    }
+
+    pub fn weak<L>(self, link: &L) -> WeakReference<L::Platform, T>
+    where
+        L: Link,
+    {
+        assert_eq!(self.instance_id, link.instance().id);
+
+        WeakReference::new(Weak::new(link.instance()), self)
+    }
+}
+
+impl<T> Reference<T>
+where
+    T: Default + 'static,
+{
+    pub fn take<L>(&self, link: &L) -> T
+    where
+        L: Link,
+        T: Default,
+    {
+        self.replace(link, Default::default())
     }
 }
 
 impl<T> Clone for Reference<T> {
     fn clone(&self) -> Self {
-        Reference {
-            current: self.current.clone(),
-        }
+        *self
     }
 }
 
-impl<T> Default for Reference<T> {
-    fn default() -> Self {
-        Reference {
-            current: Weak::new(),
-        }
-    }
-}
+impl<T> Copy for Reference<T> {}

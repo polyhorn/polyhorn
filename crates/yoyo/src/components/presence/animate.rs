@@ -18,22 +18,27 @@ where
     T: Clone + 'static,
 {
     fn render(&self, manager: &mut Manager) -> Element {
-        let mut memory = use_reference!(manager);
-        let marker = use_state!(manager, ());
-        let is_animated = use_reference!(manager);
+        let children = manager
+            .children()
+            .to_vec()
+            .into_iter()
+            .cloned()
+            .collect::<Vec<_>>();
 
-        if self.initial {
-            is_animated.replace(());
-        }
-
-        if memory.is_none() {
+        let memory = use_reference!(manager, {
             let mut initial = Memory::new();
 
-            for child in manager.children().to_vec() {
-                initial.insert(child.clone());
+            for child in children {
+                initial.insert(child);
             }
 
-            memory.replace(initial);
+            initial
+        });
+
+        let is_animated = use_reference!(manager, false);
+
+        if self.initial {
+            is_animated.replace(manager, true);
         }
 
         let present: HashSet<_> = manager
@@ -43,39 +48,41 @@ where
             .map(|child| child.key().clone())
             .collect();
 
-        let present: HashSet<_> = memory
-            .apply(|memory| {
-                let mut ids = vec![];
+        let children = manager
+            .children()
+            .to_vec()
+            .into_iter()
+            .cloned()
+            .collect::<Vec<_>>();
 
-                for element in manager.children().to_vec().into_iter().cloned() {
-                    if let Some((id, existing)) = memory.lookup(&element.key()) {
-                        *existing = element;
-                        ids.push(id);
-                    } else {
-                        ids.push(memory.insert(element));
-                    }
+        let present: HashSet<_> = memory.apply(manager, |memory| {
+            let mut ids = vec![];
+
+            for element in children {
+                if let Some((id, existing)) = memory.lookup(&element.key()) {
+                    *existing = element;
+                    ids.push(id);
+                } else {
+                    ids.push(memory.insert(element));
+                }
+            }
+
+            for key in memory.keys().cloned().collect::<Vec<_>>() {
+                if present.contains(&key) {
+                    continue;
                 }
 
-                for key in memory.keys().cloned().collect::<Vec<_>>() {
-                    if present.contains(&key) {
-                        continue;
-                    }
+                memory.forget(&key);
+            }
 
-                    memory.forget(&key);
-                }
+            ids.into_iter().collect()
+        });
 
-                ids.into_iter().collect()
-            })
-            .unwrap_or_default();
+        let snapshot = memory.apply(manager, |memory| memory.to_owned());
 
-        let snapshot = memory.to_owned().unwrap();
-
-        use_effect!(
-            manager,
-            with!((is_animated), |_| {
-                is_animated.replace(());
-            })
-        );
+        use_effect!(manager, move |link, _| {
+            is_animated.replace(link, true);
+        });
 
         Element::fragment(
             Key::new(()),
@@ -85,12 +92,11 @@ where
                 .map(|(id, element)| {
                     let presence = PresenceContext {
                         custom: self.custom.clone(),
-                        is_animated: is_animated.is_some(),
+                        is_animated: is_animated.apply(manager, |&mut value| value),
                         is_present: present.contains(&id),
                         safe_to_remove: SafeToRemove {
                             id,
-                            marker: marker.clone(),
-                            memory: memory.clone(),
+                            memory: memory.weak(manager),
                         },
                     };
 

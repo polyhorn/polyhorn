@@ -1,53 +1,65 @@
-use super::Trigger;
-use serde::{Deserialize, Serialize};
-use std::cell::RefCell;
-use std::rc::{Rc, Weak};
+use std::cell::{Ref, RefMut};
+use std::marker::PhantomData;
+
+use super::{Link, Weak, WeakState};
 
 pub struct State<T>
 where
-    T: Serialize + for<'a> Deserialize<'a>,
+    T: 'static,
 {
-    data: Weak<RefCell<T>>,
-    link: Rc<dyn Trigger>,
+    instance_id: usize,
+    state_id: usize,
+    marker: PhantomData<T>,
 }
 
-impl<T> State<T>
-where
-    T: Serialize + for<'a> Deserialize<'a>,
-{
-    pub fn new(value: &Rc<RefCell<T>>, link: impl Trigger + 'static) -> State<T> {
+impl<T> State<T> {
+    pub fn new(instance_id: usize, state_id: usize) -> State<T> {
         State {
-            data: Rc::downgrade(value),
-            link: Rc::new(link),
+            instance_id,
+            state_id,
+            marker: PhantomData,
         }
     }
 
-    pub fn replace(&self, value: impl Into<T>) -> Option<T> {
-        if let Some(data) = self.data.upgrade() {
-            let result = std::mem::replace(&mut *data.borrow_mut(), value.into());
-            self.link.trigger();
-            Some(result)
-        } else {
-            None
-        }
-    }
-
-    pub fn to_owned(&self) -> T::Owned
+    pub fn get<'a, L>(&self, link: &'a L) -> Ref<'a, T>
     where
-        T: ToOwned,
+        L: Link,
     {
-        self.data.upgrade().unwrap().borrow_mut().to_owned()
+        assert_eq!(self.instance_id, link.instance().id);
+
+        Ref::map(link.memory().state(self.state_id), |state| {
+            state.downcast_ref().unwrap()
+        })
+    }
+
+    pub fn replace<L>(&self, link: &L, value: T) -> T
+    where
+        L: Link,
+    {
+        assert_eq!(self.instance_id, link.instance().id);
+
+        link.instance().renderer().queue_rerender(link.instance());
+
+        let mut state = RefMut::map(link.memory().state_mut(self.state_id), |state| {
+            state.downcast_mut().unwrap()
+        });
+        std::mem::replace(&mut state, value)
+    }
+
+    pub fn weak<L>(self, link: &L) -> WeakState<L::Platform, T>
+    where
+        L: Link,
+    {
+        assert_eq!(self.instance_id, link.instance().id);
+
+        WeakState::new(Weak::new(link.instance()), self)
     }
 }
 
-impl<T> Clone for State<T>
-where
-    T: Serialize + for<'a> Deserialize<'a>,
-{
+impl<T> Clone for State<T> {
     fn clone(&self) -> Self {
-        State {
-            data: self.data.clone(),
-            link: self.link.clone(),
-        }
+        *self
     }
 }
+
+impl<T> Copy for State<T> {}

@@ -29,28 +29,21 @@ where
     T: Screen,
 {
     fn render(&self, manager: &mut Manager) -> Element {
-        let selected: Reference<Vec<T>> = use_reference!(manager);
+        let selected: Reference<Vec<T>> = use_reference!(manager, vec![T::default()]);
         let marker = use_state!(manager, ());
 
-        let on_navigate = with!((selected, marker), |screen: T| {
-            selected.clone().apply(|selected| selected.push(screen));
-
-            marker.replace(());
+        let on_navigate = manager.bind(move |link, screen: T| {
+            selected.apply(link, |selected| selected.push(screen));
+            marker.replace(link, ());
         });
 
-        let on_pop = with!((selected, marker), |_| {
-            selected.clone().apply(|selected| selected.pop());
-
-            marker.replace(());
+        let on_pop = manager.bind(move |link, _| {
+            selected.apply(link, |selected| selected.pop());
+            marker.replace(link, ());
         });
-
-        if selected.is_none() {
-            selected.replace(vec![T::default()]);
-        }
 
         let containers: Vec<_> = selected
-            .to_owned()
-            .unwrap()
+            .apply(manager, |selected| selected.clone())
             .into_iter()
             .enumerate()
             .map(|(i, screen)| {
@@ -58,9 +51,9 @@ where
                 match i {
                     0 => element,
                     _ => poly!(
-                        <ModalContainer key={ i } on_dismiss={ with!((selected, marker), |_| {
-                            selected.clone().apply(|selected| selected.pop());
-                            marker.replace(());
+                        <ModalContainer key={ i } on_dismiss={ manager.bind(move |link, _| {
+                            selected.apply(link, |selected| selected.pop());
+                            marker.replace(link, ());
                         }) }>
                             { element }
                         </ModalContainer>

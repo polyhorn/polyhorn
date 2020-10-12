@@ -33,14 +33,13 @@ struct ConcreteImage {
 
 impl Component for Image {
     fn render(&self, manager: &mut Manager) -> Element {
-        let view_ref: Reference<ContainerID> = use_reference!(manager);
-        let view_ref_effect = view_ref.clone();
+        let view_ref: Reference<Option<ContainerID>> = use_reference!(manager, None);
 
         let image_source = self.source.clone();
         let tint_color = self.style.image.tint_color.clone();
 
-        use_effect!(manager, move |buffer| {
-            let id = match view_ref_effect.as_copy() {
+        use_effect!(manager, move |link, buffer| {
+            let id = match view_ref.apply(link, |id| id.to_owned()) {
                 Some(id) => id,
                 None => return,
             };
@@ -103,7 +102,7 @@ impl Component for Image {
             Key::new(()),
             Builtin::ImageView,
             manager.children(),
-            Some(view_ref),
+            Some(view_ref.weak(manager)),
         )
     }
 }

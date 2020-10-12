@@ -1,4 +1,4 @@
-use polyhorn::{Reference, State};
+use polyhorn::{Link, WeakReference};
 
 use super::{Memory, ID};
 
@@ -15,16 +15,12 @@ where
 #[derive(Clone)]
 pub struct SafeToRemove {
     pub(super) id: ID,
-    pub(super) memory: Reference<Memory>,
-    pub(super) marker: State<()>,
+    pub(super) memory: WeakReference<Memory>,
 }
 
 impl SafeToRemove {
     pub fn invoke(&self) {
-        // TODO: ugly trick to get a mutable reference to the memory.
-        self.memory.clone().apply(|memory| {
-            memory.remove(self.id);
-        });
-        self.marker.replace(());
+        self.memory.apply(|memory| memory.remove(self.id));
+        self.memory.with_link(|link| link.queue_rerender());
     }
 }

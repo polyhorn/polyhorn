@@ -1,64 +1,80 @@
-use super::{Disposable, Element, Instance, Key, Platform};
 use std::any::Any;
-use std::collections::{HashMap, HashSet};
-use std::rc::Rc;
+use std::cell::{Ref, RefCell, RefMut};
+use std::collections::HashMap;
 
-pub struct Memory<P>
-where
-    P: Platform + ?Sized,
-{
-    element: Element<P>,
+use super::{Disposable, Key};
 
+pub struct Memory {
     /// This is the state of this component.
-    state: HashMap<Key, Rc<dyn Any>>,
+    state: Vec<Box<RefCell<dyn Any>>>,
+    state_ids: HashMap<Key, usize>,
 
     /// This is a map of references of this component.
-    references: HashMap<Key, Rc<dyn Any>>,
+    references: Vec<Box<RefCell<dyn Any>>>,
+    reference_ids: HashMap<Key, usize>,
 
     /// This is a map of conditions of effects.
     effects: HashMap<Key, Key>,
 
-    /// This is a map of edges.
-    edges: HashMap<Key, Rc<Instance<P>>>,
-
     futures: HashMap<Key, Disposable>,
 }
 
-impl<P> Memory<P>
-where
-    P: Platform + ?Sized,
-{
-    pub fn new(element: Element<P>) -> Memory<P> {
+impl Memory {
+    pub fn new() -> Memory {
         Memory {
-            element,
-            state: HashMap::new(),
-            references: HashMap::new(),
+            state: vec![],
+            state_ids: HashMap::new(),
+            references: vec![],
+            reference_ids: HashMap::new(),
             effects: HashMap::new(),
-            edges: HashMap::new(),
             futures: HashMap::new(),
         }
     }
 
-    pub fn element(&self) -> &Element<P> {
-        &self.element
+    pub fn state(&self, id: usize) -> Ref<dyn Any> {
+        self.state[id].borrow()
     }
 
-    pub fn update(&mut self, element: Element<P>) -> Element<P> {
-        std::mem::replace(&mut self.element, element)
+    pub fn state_mut(&self, id: usize) -> RefMut<dyn Any> {
+        self.state[id].borrow_mut()
     }
 
-    pub fn state<F>(&mut self, key: Key, initializer: F) -> &Rc<dyn Any>
+    pub fn state_id<F, T>(&mut self, key: Key, initializer: F) -> usize
     where
-        F: FnOnce() -> Rc<dyn Any>,
+        F: FnOnce() -> T,
+        T: 'static,
     {
-        self.state.entry(key).or_insert_with(initializer)
+        let state = &mut self.state;
+        let &mut id = self.state_ids.entry(key).or_insert_with(|| {
+            let value = initializer();
+            state.push(Box::new(RefCell::new(value)));
+            state.len() - 1
+        });
+
+        id
     }
 
-    pub fn reference<F>(&mut self, key: Key, initializer: F) -> &Rc<dyn Any>
+    pub fn reference(&self, id: usize) -> Ref<dyn Any> {
+        self.references[id].borrow()
+    }
+
+    pub fn reference_mut(&self, id: usize) -> RefMut<dyn Any> {
+        self.references[id].borrow_mut()
+    }
+
+    pub fn reference_id<F, T>(&mut self, key: Key, initializer: F) -> usize
     where
-        F: FnOnce() -> Rc<dyn Any>,
+        F: FnOnce() -> T,
+        T: 'static,
     {
-        self.references.entry(key).or_insert_with(initializer)
+        let references = &mut self.references;
+        let &mut id = self.reference_ids.entry(key).or_insert_with(|| {
+            let value = initializer();
+            references.push(Box::new(RefCell::new(value)));
+            references.len() - 1
+        });
+
+        id
     }
 
     pub fn effect(&mut self, key: Key, conditions: Key) -> bool {
@@ -78,25 +94,5 @@ where
         F: FnOnce() -> Disposable,
     {
         self.futures.entry(key).or_insert_with(initializer);
-    }
-
-    pub fn keys(&self) -> HashSet<Key> {
-        self.edges.keys().cloned().collect()
-    }
-
-    pub fn edge(&self, key: &Key) -> Option<&Rc<Instance<P>>> {
-        self.edges.get(key)
-    }
-
-    pub fn edges(&self) -> impl Iterator<Item = &Rc<Instance<P>>> {
-        self.edges.values()
-    }
-
-    pub fn add_edge(&mut self, key: Key, instance: Rc<Instance<P>>) {
-        self.edges.insert(key, instance);
-    }
-
-    pub fn remove_edge(&mut self, key: &Key) -> Option<Rc<Instance<P>>> {
-        self.edges.remove(key)
     }
 }

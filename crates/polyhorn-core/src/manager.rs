@@ -1,7 +1,9 @@
 use super::hooks::{UseAsync, UseContext, UseEffect, UseReference, UseState};
-use super::{Bus, Context, ContextTree, Element, Key, Link, Memory, Platform, Reference, State};
+use super::{
+    Bus, Context, ContextTree, EffectLink, Element, Instance, Key, Link, Memory, Platform,
+    Reference, State, Weak, WeakLink,
+};
 use serde::{Deserialize, Serialize};
-use std::cell::RefCell;
 use std::future::Future;
 use std::rc::Rc;
 
@@ -11,11 +13,11 @@ where
 {
     compositor: &'a P::Compositor,
     bus: &'a P::Bus,
-    memory: &'a mut Memory<P>,
+    memory: &'a mut Memory,
     context: &'a ContextTree,
     children: Element<P>,
-    effects: Vec<Box<dyn FnOnce(&mut P::CommandBuffer)>>,
-    link: Link<P>,
+    effects: Vec<Box<dyn FnOnce(&EffectLink<P>, &mut P::CommandBuffer)>>,
+    instance: &'a Rc<Instance<P>>,
 }
 
 impl<'a, P> Manager<'a, P>
@@ -25,10 +27,10 @@ where
     pub fn new(
         compositor: &'a P::Compositor,
         bus: &'a P::Bus,
-        memory: &'a mut Memory<P>,
+        memory: &'a mut Memory,
         context: &'a ContextTree,
         children: Element<P>,
-        link: Link<P>,
+        instance: &'a Rc<Instance<P>>,
     ) -> Manager<'a, P> {
         Manager {
             compositor,
@@ -37,7 +39,7 @@ where
             context,
             children,
             effects: vec![],
-            link,
+            instance,
         }
     }
 
@@ -49,7 +51,20 @@ where
         self.children.clone()
     }
 
-    pub(crate) fn into_effects(self) -> Vec<Box<dyn FnOnce(&mut P::CommandBuffer)>> {
+    pub fn bind<F, I>(&self, closure: F) -> impl Fn(I)
+    where
+        F: Fn(&WeakLink<P>, I),
+    {
+        let weak = Weak::new(self.instance);
+
+        move |input: I| {
+            weak.with_link(|link| closure(link, input));
+        }
+    }
+
+    pub(crate) fn into_effects(
+        self,
+    ) -> Vec<Box<dyn FnOnce(&EffectLink<P>, &mut P::CommandBuffer)>> {
         self.effects
     }
 }
@@ -85,7 +100,7 @@ where
 {
     fn use_effect<F>(&mut self, key: Key, conditions: Option<Key>, effect: F)
     where
-        F: FnOnce(&mut P::CommandBuffer) + 'static,
+        F: FnOnce(&EffectLink<P>, &mut P::CommandBuffer) + 'static,
     {
         if let Some(conditions) = conditions {
             if !self.memory.effect(key, conditions) {
@@ -105,14 +120,9 @@ where
     where
         S: Serialize + for<'b> Deserialize<'b> + 'static,
     {
-        let value = self
-            .memory
-            .state(key, move || Rc::new(RefCell::new(initial_value)))
-            .clone()
-            .downcast::<RefCell<S>>()
-            .unwrap();
+        let state_id = self.memory.state_id(key, move || initial_value);
 
-        State::new(&value, self.link.clone())
+        State::new(self.instance.id, state_id)
     }
 }
 
@@ -120,17 +130,28 @@ impl<'a, P> UseReference for Manager<'a, P>
 where
     P: Platform + ?Sized,
 {
-    fn use_reference<R>(&mut self, key: Key) -> Reference<R>
+    fn use_reference<R, I>(&mut self, key: Key, initializer: I) -> Reference<R>
     where
         R: 'static,
+        I: FnOnce() -> R,
     {
-        let value = self
-            .memory
-            .reference(key, || Rc::new(RefCell::new(None::<R>)))
-            .clone()
-            .downcast::<RefCell<Option<R>>>()
-            .unwrap();
+        let reference_id = self.memory.reference_id(key, initializer);
 
-        Reference::new(&value)
+        Reference::new(self.instance.id, reference_id)
+    }
+}
+
+impl<'a, P> Link for Manager<'a, P>
+where
+    P: Platform + ?Sized,
+{
+    type Platform = P;
+
+    fn instance(&self) -> &Rc<Instance<Self::Platform>> {
+        self.instance
+    }
+
+    fn memory(&self) -> &Memory {
+        self.memory
     }
 }

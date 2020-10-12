@@ -1,6 +1,6 @@
 use futures::channel::mpsc::{self, TrySendError};
 use futures::{Future, StreamExt};
-use polyhorn_core::{UseAsync, UseReference};
+use polyhorn_core::{Link, UseAsync, UseReference};
 
 #[doc(hidden)]
 pub use polyhorn_core::{use_id, Key};
@@ -55,9 +55,9 @@ pub trait UseChannel {
         F: Future<Output = ()>;
 }
 
-impl<'a, M> UseChannel for M
+impl<M> UseChannel for M
 where
-    M: UseAsync + UseReference,
+    M: UseAsync + UseReference + Link,
 {
     fn use_channel<T, C, F>(&mut self, key: Key, closure: C) -> Sender<T>
     where
@@ -65,17 +65,15 @@ where
         C: FnOnce(Receiver<T>) -> F + 'static,
         F: Future<Output = ()>,
     {
-        let tx = self.use_reference(key.clone());
         let mut rx = None;
 
-        if tx.is_none() {
+        let tx = self.use_reference(key.clone(), || {
             let (new_tx, new_rx) = mpsc::channel::<T>(1024);
             rx = Some(new_rx);
+            new_tx
+        });
 
-            tx.replace(new_tx);
-        }
-
-        let tx = tx.to_owned().unwrap();
+        let tx = tx.apply(self, |tx| tx.to_owned());
 
         self.use_async(key, async move {
             if let Some(rx) = rx.take() {

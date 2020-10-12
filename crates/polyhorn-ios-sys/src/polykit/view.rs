@@ -3,7 +3,7 @@ use objc::*;
 
 use super::{
     PLYAnimationHandle, PLYCallback, PLYCornerRadii, PLYEdgeInsets, PLYKeyframeAnimation,
-    PLYLayout, PLYWindow,
+    PLYLayout, PLYLayoutEvent, PLYWindow,
 };
 use crate::coregraphics::{CGFloat, CGRect};
 use crate::foundation::NSString;
@@ -148,6 +148,12 @@ impl PLYView {
     pub fn set_on_pointer_up(&mut self, callback: PLYCallback<NSString>) {
         unsafe {
             let _: () = msg_send![self.object, setOnPointerUp: callback.as_raw()];
+        }
+    }
+
+    pub fn set_on_layout(&mut self, callback: PLYCallback<PLYLayoutEvent>) {
+        unsafe {
+            let _: () = msg_send![self.object, setOnLayout: callback.as_raw()];
         }
     }
 

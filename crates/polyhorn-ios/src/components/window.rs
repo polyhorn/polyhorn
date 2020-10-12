@@ -29,29 +29,35 @@ impl Container for PLYWindow {
 
 impl Component for Window {
     fn render(&self, manager: &mut Manager) -> Element {
-        let reference = use_reference!(manager);
-        let reference_clone = reference.clone();
+        let reference = use_reference!(manager, None);
 
-        let insets = use_reference!(manager);
-        let marker = use_state!(manager, ());
+        let insets = use_reference!(manager, SafeAreaInsets::new(20.0, 0.0, 0.0, 0.0));
+
+        let weak_insets = insets.weak(manager);
 
         let mut channel: Sender<SafeAreaInsets> = use_channel!(manager, {
-            let insets = insets.clone();
-
             move |mut receiver| async move {
                 while let Some(message) = receiver.next().await {
-                    if insets.to_owned() == Some(message) {
-                        continue;
-                    }
+                    let rerender = weak_insets
+                        .apply(|insets| {
+                            if *insets == message {
+                                false
+                            } else {
+                                *insets = message;
+                                true
+                            }
+                        })
+                        .unwrap_or_default();
 
-                    insets.replace(message);
-                    marker.replace(());
+                    if rerender {
+                        weak_insets.queue_rerender();
+                    }
                 }
             }
         });
 
-        use_effect!(manager, move |buffer| {
-            let id = match reference_clone.as_copy() {
+        use_effect!(manager, move |link, buffer| {
+            let id = match reference.apply(link, |id| id.to_owned()) {
                 Some(id) => id,
                 None => return,
             };
@@ -112,14 +118,10 @@ impl Component for Window {
             Builtin::Window,
             Element::context(
                 Key::new(()),
-                Rc::new(
-                    insets
-                        .to_owned()
-                        .unwrap_or(SafeAreaInsets::new(20.0, 0.0, 0.0, 0.0)),
-                ),
+                Rc::new(insets.apply(manager, |insets| insets.to_owned())),
                 manager.children(),
             ),
-            Some(reference),
+            Some(reference.weak(manager)),
         )
     }
 }

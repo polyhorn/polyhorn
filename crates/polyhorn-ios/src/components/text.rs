@@ -71,14 +71,12 @@ fn transform_texts(texts: Vec<TextSegment>) -> NSAttributedString {
 
 impl Component for Text {
     fn render(&self, manager: &mut Manager) -> Element {
-        let label_ref = use_reference!(manager);
-
-        let label_ref_effect = label_ref.clone();
+        let label_ref = use_reference!(manager, None);
 
         let texts = collect_texts(&self.style, &manager.children());
 
-        use_effect!(manager, move |buffer| {
-            let id = match label_ref_effect.as_copy() {
+        use_effect!(manager, move |link, buffer| {
+            let id = match label_ref.apply(link, |label| label.to_owned()) {
                 Some(id) => id,
                 None => return,
             };
@@ -149,7 +147,7 @@ impl Component for Text {
             Key::new(()),
             Builtin::Label,
             Element::fragment(Key::new(()), vec![]),
-            Some(label_ref),
+            Some(label_ref.weak(manager)),
         )
     }
 }

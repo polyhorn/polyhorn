@@ -1,6 +1,6 @@
 use super::element::{ElementBuiltin, ElementComponent, ElementContext, ElementFragment};
 use super::{
-    Bus, CommandBuffer, Component, Compositor, Disposable, Element, Instance, Link, Manager,
+    Bus, CommandBuffer, Component, Compositor, Disposable, EffectLink, Element, Instance, Manager,
     Platform,
 };
 use std::cell::RefCell;
@@ -47,14 +47,13 @@ where
                 .bus
                 .try_borrow()
                 .expect("Couldn't borrow bus.");
-            let link = Link::new(Rc::downgrade(instance));
             let mut manager = Manager::new(
                 &*compositor,
                 &*bus,
                 &mut memory,
                 instance.context(),
                 *element.children,
-                link,
+                &instance,
             );
             (
                 vec![element.component.render(&mut manager)],
@@ -65,8 +64,10 @@ where
         self.rerender_edges(instance, edges);
 
         // Finally, we apply the effects and we're done!
+        let memory = instance.memory();
+        let link = EffectLink::new(&instance, &memory);
         for effect in effects {
-            effect(&mut self.buffer);
+            effect(&link, &mut self.buffer);
         }
     }
 
@@ -81,52 +82,51 @@ where
     }
 
     fn rerender_edges(&mut self, instance: &Rc<Instance<P>>, edges: Vec<Element<P>>) {
-        // let missing_edges = memory.keep_edges(edges.iter().map(|element| element.key()));
-        let mut memory = instance.memory_mut();
-        let memory = memory.deref_mut();
+        let mut topology = instance.topology_mut();
+        let topology = topology.deref_mut();
 
         // Re-rendering looks a bit like mark and sweep. We start by collecting
         // the set of keys of edges.
-        let mut keys = memory.keys();
+        let mut keys = topology.keys();
 
         for element in edges {
             let key = element.key();
 
             keys.remove(key);
 
-            if let Some(existing) = memory.edge(key) {
+            if let Some(existing) = topology.edge(key) {
                 // The edge already exists. We replace its element and issue a
                 // re-render.
-                existing.memory_mut().deref_mut().update(element);
+                existing.topology_mut().deref_mut().update(element);
                 self.rerender(existing)
             } else {
                 // The edge does not yet exist. We issue a fresh render and store
-                // the resulting instance in the memory of this instance.
+                // the resulting instance in the topology of this instance.
                 let key = key.clone();
                 let instance = self.render(
                     Some(instance.clone()),
                     element,
                     instance.container().clone(),
                 );
-                memory.add_edge(key, instance);
+                topology.add_edge(key, instance);
             }
         }
 
         // Finally, we unmount all instances that correspond to edges that are
         // no longer present.
         for key in keys {
-            if let Some(instance) = memory.remove_edge(&key) {
+            if let Some(instance) = topology.remove_edge(&key) {
                 self.unmount(&instance);
             }
         }
     }
 
     fn unmount(&mut self, instance: &Rc<Instance<P>>) {
-        for edge in instance.memory_mut().edges() {
+        for edge in instance.topology_mut().edges() {
             self.unmount(&edge);
         }
 
-        match instance.memory_mut().deref_mut().element() {
+        match instance.topology_mut().deref_mut().element() {
             Element::Builtin(_) => {
                 self.buffer.unmount(instance.container());
             }
@@ -136,7 +136,7 @@ where
 
     /// This function is called when re-rendering an existing instance.
     pub fn rerender(&mut self, instance: &Rc<Instance<P>>) {
-        let element = instance.memory_mut().element().clone();
+        let element = instance.topology_mut().element().clone();
 
         match element {
             Element::Builtin(element) => self.rerender_builtin(instance, element),
@@ -166,7 +166,7 @@ where
                 });
 
                 if let Some(reference) = &element.reference {
-                    reference.replace(container);
+                    reference.replace(Some(container));
                 }
 
                 container
@@ -213,7 +213,7 @@ where
         })
     }
 
-    pub fn rerender(self: &Rc<Self>, instance: &Rc<Instance<P>>) {
+    pub fn queue_rerender(self: &Rc<Self>, instance: &Rc<Instance<P>>) {
         let renderer = self.clone();
         let instance = instance.clone();
 
@@ -240,12 +240,6 @@ where
 /// This is the entry point of Polyhorn. This function renders an element into
 /// the given container. The returned instance must be retained. Once the
 /// returned is dropped, all UI will be unmounted.
-///
-/// Example
-/// -------
-/// ```rust
-/// polyhorn::render(poly!(<Window />), Container::root())
-/// ```
 pub fn render<F, P>(element: F, container: P::Container) -> Disposable
 where
     F: FnOnce() -> Element<P> + Send + 'static,

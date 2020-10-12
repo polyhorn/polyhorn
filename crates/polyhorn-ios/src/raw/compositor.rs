@@ -87,7 +87,7 @@ impl Compositor {
 }
 
 impl polyhorn_core::Compositor<Platform> for Compositor {
-    fn buffer(&mut self) -> CommandBuffer {
+    fn buffer(&self) -> CommandBuffer {
         CommandBuffer {
             compositor: self.clone(),
             commands: vec![],

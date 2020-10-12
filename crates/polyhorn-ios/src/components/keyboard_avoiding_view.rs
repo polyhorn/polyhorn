@@ -67,21 +67,19 @@ impl Container for PLYKeyboardAvoidingView {
 
 impl Component for KeyboardAvoidingView {
     fn render(&self, manager: &mut Manager) -> Element {
-        let view_ref: Reference<ContainerID> = use_reference!(manager);
-        let view_ref_effect = view_ref.clone();
-
-        let is_subsequent_render = use_reference!(manager);
+        let view_ref: Reference<Option<ContainerID>> = use_reference!(manager, None);
+        let is_subsequent_render = use_reference!(manager, false);
 
         let transform = self.transform.clone();
 
-        use_effect!(manager, move |buffer| {
-            let id = match view_ref_effect.as_copy() {
+        use_effect!(manager, move |link, buffer| {
+            let id = match view_ref.apply(link, |id| id.to_owned()) {
                 Some(id) => id,
                 None => return,
             };
 
-            let is_first_render = is_subsequent_render.is_none();
-            is_subsequent_render.replace(true);
+            let is_first_render = is_subsequent_render.apply(link, |is| is.to_owned());
+            is_subsequent_render.replace(link, true);
 
             buffer.mutate(&[id], move |containers| {
                 let container = &mut containers[0];
@@ -145,7 +143,7 @@ impl Component for KeyboardAvoidingView {
             Key::new(()),
             Builtin::KeyboardAvoidingView,
             manager.children(),
-            Some(view_ref),
+            Some(view_ref.weak(manager)),
         )
     }
 }

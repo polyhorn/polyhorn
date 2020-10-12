@@ -25,5 +25,5 @@ pub trait Compositor<P>
 where
     P: Platform + ?Sized,
 {
-    fn buffer(&mut self) -> P::CommandBuffer;
+    fn buffer(&self) -> P::CommandBuffer;
 }

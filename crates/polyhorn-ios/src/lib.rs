@@ -2,7 +2,7 @@
 
 #![warn(missing_docs)]
 
-pub use polyhorn_core::{render, Context, ContextProvider, Key, Reference, State};
+pub use polyhorn_core::{render, Context, ContextProvider, Key, Link, Reference, State};
 pub use polyhorn_ui::{assets, color, font, geometry, layout, linalg, styles};
 
 pub mod components;
@@ -29,5 +29,10 @@ pub type Instance = polyhorn_core::Instance<Platform>;
 
 /// Polyhorn core manager type that is specialized for the iOS platform.
 pub type Manager<'a> = polyhorn_core::Manager<'a, Platform>;
+
+pub type Weak = polyhorn_core::Weak<Platform>;
+pub type WeakLink<'a> = polyhorn_core::WeakLink<'a, Platform>;
+pub type WeakReference<T> = polyhorn_core::WeakReference<Platform, T>;
+pub type WeakState<T> = polyhorn_core::WeakState<Platform, T>;
 
 pub use raw::Component;
