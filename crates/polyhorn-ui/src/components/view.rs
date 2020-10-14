@@ -23,6 +23,7 @@ where
     /// Called when the user stops pressing a View.
     pub on_pointer_up: EventListener<()>,
 
+    /// Called when a View is layed out.
     pub on_layout: EventListener<Size<f32>>,
 
     /// This is a reference to an imperative view handle that can be used to

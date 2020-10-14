@@ -3,7 +3,6 @@ use polyhorn::Reference;
 use polyhorn_channel::{use_channel, Receiver};
 use polyhorn_ui::events::EventListener;
 use polyhorn_ui::geometry::{Dimension, Size};
-use polyhorn_ui::handles::{Imperative, ViewHandle};
 use polyhorn_ui::styles::{Position, Transform, ViewStyle};
 use std::sync::{Arc, RwLock};
 
@@ -49,24 +48,7 @@ where
         manager: &mut Manager,
         bounds: Reference<Size<f32>>,
         is_present: bool,
-        reference: Reference<Option<<polyhorn::prelude::View as Imperative>::Handle>>,
     ) -> ViewStyle {
-        // let bounds = use_reference!(manager, Default::default());
-        // let weak_bounds = bounds.weak(manager);
-
-        // let mut bounds_sender = use_channel!(manager, move |mut receiver| {
-        //     async move {
-        //         while let Some(value) = receiver.next().await {
-        //             weak_bounds.replace(value);
-        //             eprintln!(
-        //                 "Updated bounds: {:#?}, value: {:#?}",
-        //                 weak_bounds.apply(|&mut bounds| bounds),
-        //                 value
-        //             );
-        //         }
-        //     }
-        // });
-
         let bounds = bounds.apply(manager, |&mut bounds| bounds);
 
         let position = if is_present {
@@ -259,7 +241,7 @@ where
         let style = ViewStyle {
             opacity,
             transform,
-            ..self.adjust_style(manager, bounds, is_present, reference)
+            ..self.adjust_style(manager, bounds, is_present)
         };
 
         let reference = reference.weak(manager);

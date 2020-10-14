@@ -8,6 +8,7 @@ pub trait ViewHandle: Animatable {
     /// TODO: on what thread does this occur?
     fn layout_guide(&self) -> LayoutGuide<f32>;
 
+    /// This function should call the given callback with the size of this view.
     fn size<F>(&self, callback: F)
     where
         F: FnOnce(Size<f32>) + Send + 'static;

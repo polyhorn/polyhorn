@@ -20,8 +20,19 @@ pub fn asset_impl(input: proc_macro2::TokenStream) -> proc_macro2::TokenStream {
 
     let package = std::env::var("CARGO_PKG_NAME").unwrap();
 
-    let tree =
-        usvg::Tree::from_file(format!("assets/{}.svg", name), &usvg::Options::default()).unwrap();
+    let tree = usvg::Tree::from_file(
+        format!(
+            "{}/assets/{}.svg",
+            std::env::var("CARGO_MANIFEST_DIR").unwrap(),
+            name
+        ),
+        &usvg::Options::default(),
+    )
+    .expect(&format!(
+        "Couldn't find asset: \"assets/{}.svg\" in package: {:?}",
+        name,
+        std::env::var("CARGO_PKG_NAME").unwrap(),
+    ));
 
     let width = tree.svg_node().size.width() as f32;
     let height = tree.svg_node().size.height() as f32;

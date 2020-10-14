@@ -151,6 +151,7 @@ impl PLYView {
         }
     }
 
+    /// Sets a callback that is invoked when the view is layed out.
     pub fn set_on_layout(&mut self, callback: PLYCallback<PLYLayoutEvent>) {
         unsafe {
             let _: () = msg_send![self.object, setOnLayout: callback.as_raw()];

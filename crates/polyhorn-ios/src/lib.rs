@@ -30,9 +30,16 @@ pub type Instance = polyhorn_core::Instance<Platform>;
 /// Polyhorn core manager type that is specialized for the iOS platform.
 pub type Manager<'a> = polyhorn_core::Manager<'a, Platform>;
 
+/// Polyhorn core weak type that is specialized for the iOS platform.
 pub type Weak = polyhorn_core::Weak<Platform>;
+
+/// Polyhorn core weak link type that is specialized for the iOS platform.
 pub type WeakLink<'a> = polyhorn_core::WeakLink<'a, Platform>;
+
+/// Polyhorn core weak reference type that is specialized for the iOS platform.
 pub type WeakReference<T> = polyhorn_core::WeakReference<Platform, T>;
+
+/// Polyhorn core weak state type that is specialized for the iOS platform.
 pub type WeakState<T> = polyhorn_core::WeakState<Platform, T>;
 
 pub use raw::Component;
