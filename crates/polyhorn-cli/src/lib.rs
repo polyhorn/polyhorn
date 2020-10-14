@@ -7,7 +7,7 @@ use clap::{AppSettings, Clap};
 
 /// Polyhorn is a platform for rapidly building apps that run everywhere.
 #[derive(Clap)]
-#[clap(name = "polyhorn", version = "1.0", author = "Glacyr B.V.")]
+#[clap(name = "polyhorn", version = env!("CARGO_PKG_VERSION"), author = "Glacyr B.V.")]
 #[clap(setting(AppSettings::ColoredHelp))]
 pub struct Opts {
     #[clap(subcommand)]
