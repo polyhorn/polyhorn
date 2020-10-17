@@ -3,6 +3,7 @@ members = [
     "crates/casco",
     "crates/polyhorn",
     "crates/polyhorn-build",
+    "crates/polyhorn-build-android",
     "crates/polyhorn-build-ios",
     "crates/polyhorn-channel",
     "crates/polyhorn-core",

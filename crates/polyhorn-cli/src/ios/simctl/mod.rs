@@ -1,11 +1,24 @@
+//! Rust-wrapper around the `simctl` utility that is shipped with Xcode and that
+//! can be used to install apps onto one of the iOS simulator and subsequently
+//! launch them.
+
 use std::path::Path;
 use std::process::{Command, Output, Stdio};
 use std::str::FromStr;
 
+/// Represents an error that occurs while communicating with the `simctl`
+/// utility.
 #[derive(Debug)]
 pub enum Error {
+    /// Contains an error that occurred while invoking the `simctl` utility.
     IO(std::io::Error),
+
+    /// Contains an error that occurred while parsing the output of `simctl` as
+    /// utf-8.
     Utf8(std::str::Utf8Error),
+
+    /// Contains an error that occurred while parsing the output and
+    /// encountering an unexpected sequence of tokens.
     UnexpectedOutput,
 }
 
@@ -26,8 +39,15 @@ impl From<std::str::Utf8Error> for Error {
 /// other states are not recognized and mapped to [DeviceState::Unknown] instead.
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub enum DeviceState {
+    /// Represents a simulator that is not currently running.
     Shutdown,
+
+    /// Represents a simulator that is currently running. Note that simulators
+    /// may even be running while the Simulator.app is closed or the window
+    /// corresponding to a specific simulator is closed.
     Booted,
+
+    /// Represents any status that could not be parsed.
     Unknown,
 }
 
@@ -76,16 +96,19 @@ impl<'a> Device<'a> {
     }
 }
 
+/// Wrapper around the `simctl` utility.
 #[derive(Debug)]
 pub struct Simctl {
     list_output: Option<Output>,
 }
 
 impl Simctl {
+    /// Returns a new instance of the Rust wrapper around the `simctl` utility.
     pub fn new() -> Simctl {
         Simctl { list_output: None }
     }
 
+    /// Lists all simulator devices that are configured.
     pub fn list(&mut self) -> Result<DeviceManager, Error> {
         let output = Command::new("xcrun")
             .arg("simctl")
@@ -106,6 +129,7 @@ impl Simctl {
         )?))
     }
 
+    /// Boots a simulator with the given identifier.
     pub fn boot(&mut self, identifier: &str) -> Result<(), Error> {
         Command::new("xcrun")
             .arg("simctl")
@@ -118,6 +142,8 @@ impl Simctl {
         Ok(())
     }
 
+    /// Installs an application from the given path to the simulator with the
+    /// given identifier.
     pub fn install(&mut self, identifier: &str, path: impl AsRef<Path>) -> Result<(), Error> {
         Command::new("xcrun")
             .arg("simctl")
@@ -130,6 +156,8 @@ impl Simctl {
         Ok(())
     }
 
+    /// Launches an installed application with the given bundle identifier on
+    /// the simulator with the given identifier.
     pub fn launch(&mut self, identifier: &str, bundle_id: &str) -> Result<(), Error> {
         Command::new("xcrun")
             .arg("simctl")
@@ -145,6 +173,8 @@ impl Simctl {
     }
 }
 
+/// Wrapper around a set of devices. This is used to parse the output of a
+/// `simctl list` command.
 #[derive(Debug)]
 pub struct DeviceManager<'a> {
     devices: Vec<Device<'a>>,
@@ -169,6 +199,8 @@ fn parse_device<'a>(line: &'a str, operating_system: &'a str) -> Option<Device<'
 }
 
 impl<'a> DeviceManager<'a> {
+    /// Parses a set of devices from the output of `simctl list` and returns the
+    /// result.
     pub fn new(source: &'a str) -> DeviceManager<'a> {
         let mut lines = source.split("\n").into_iter();
 
@@ -199,6 +231,7 @@ impl<'a> DeviceManager<'a> {
         DeviceManager { devices }
     }
 
+    /// Starts a new query for this set of devices.
     pub fn query(&self) -> DeviceQuery<'_, 'a, std::slice::Iter<Device<'a>>> {
         DeviceQuery {
             iter: self.devices.iter(),
@@ -206,6 +239,7 @@ impl<'a> DeviceManager<'a> {
     }
 }
 
+/// Represents a query of devices.
 pub struct DeviceQuery<'a, 'b, T>
 where
     T: Iterator<Item = &'a Device<'b>>,
@@ -219,6 +253,7 @@ where
     T: Iterator<Item = &'a Device<'b>>,
     'b: 'a,
 {
+    /// Queries for simulators that run on the given operating system.
     pub fn with_operating_system(
         self,
         operating_system: &'a str,
@@ -230,6 +265,7 @@ where
         }
     }
 
+    /// Queries for simulators that have the given name.
     pub fn with_name(
         self,
         name: &'a str,
@@ -239,6 +275,7 @@ where
         }
     }
 
+    /// Queries for simulators that are in the given state.
     pub fn with_state(
         self,
         state: DeviceState,

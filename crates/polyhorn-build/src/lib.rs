@@ -7,6 +7,7 @@ pub fn build() {
 
     match target.as_ref().and_then(|target| target.to_str()) {
         Some("ios") => polyhorn_build_ios::build(),
+        Some("android") => polyhorn_build_android::build(),
         _ => {}
     }
 }

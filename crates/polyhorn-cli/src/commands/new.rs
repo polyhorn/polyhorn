@@ -10,9 +10,10 @@ pub struct New {
 }
 
 impl New {
+    /// Implementation of the platform-independent `polyhorn new` command.
     pub fn main(&self) {
         // TODO: add error.
-        let _ = create_dir(&self.path);
+        create_dir(&self.path).unwrap();
 
         self.write_cargo().unwrap();
         self.write_assets().unwrap();

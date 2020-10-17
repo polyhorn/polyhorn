@@ -1,6 +1,12 @@
+//! Rust-wrapper around the third-party `xcodegen` utility (installed through
+//! Homebrew) that makes it possible to generate Xcode project files
+//! programmatically. Note: the documentation within this module is taken
+//! directly from the original excellent documentation of `xcodegen`.
+
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 
+/// Contains the `xcodegen` specification of a project.
 #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
 pub struct Project {
     /// Name of the generated project.
@@ -10,6 +16,7 @@ pub struct Project {
     pub targets: HashMap<String, Target>,
 }
 
+/// Represents a target that is built within a project.
 #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
 pub struct Target {
     /// Product type of the target.
@@ -36,40 +43,64 @@ pub struct Target {
     pub dependencies: Vec<Dependency>,
 }
 
+/// This will provide default build settings for a certain product type.
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash, Serialize, Deserialize)]
 pub enum ProductType {
+    /// Represents a regular application.
     #[serde(rename = "application")]
     Application,
 
+    /// Represents an App Clip.
     #[serde(rename = "application-on-demand-install-capable")]
     ApplicationOnDemandInstallCapable,
 }
 
+/// Indicates the platform that a target's product can run on.
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash, Serialize, Deserialize)]
 pub enum Platform {
+    /// Represents an application or extension that runs on iOS.
     #[serde(rename = "iOS")]
     IOS,
 
+    /// Represents an application or extension that runs on macOS.
     #[serde(rename = "macOS")]
     MacOS,
 
+    /// Represents an application or extension that runs on tvOS.
     #[serde(rename = "tvOS")]
     TVOS,
 
+    /// Represents an application or extension that runs on watchOS.
     #[serde(rename = "watchOS")]
     WatchOS,
 }
 
+/// Represents a source location that is included for a particular target within
+/// an Xcode project.
 #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
 pub struct TargetSource {
     /// The path of the source file or directory.
     pub path: String,
 }
 
+/// Represents a dependency of a target. Currently, only frameworks are
+/// supported. Note that framework dependencies are also used by `xcodegen` to
+/// refer to static libraries (despite the fact that frameworks are dynamic).
 #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum Dependency {
-    Framework { framework: String, embed: bool },
+    /// Represents a framework dependency.
+    Framework {
+        /// Name or path of framework to link.
+        framework: String,
+
+        /// Whether or not to include a copy of the framework within the app's
+        /// bundle. This should be false for a static library because it's
+        /// unnecessary to include the `lib*.a` file in the bundle and
+        /// additionally, Apple might reject apps that do ship static libraries
+        /// that are not linked to the executable.
+        embed: bool,
+    },
 }
 
 #[cfg(test)]

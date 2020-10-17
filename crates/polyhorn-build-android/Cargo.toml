@@ -1,0 +1,14 @@
+[package]
+name = "polyhorn-build-android"
+version = "0.2.0"
+authors = ["Tim <tim@glacyr.com>"]
+edition = "2018"
+license = "MIT"
+description = "Automatically finds, compiles and links Java source files."
+repository = "https://github.com/polyhorn/polyhorn/tree/crates/polyhorn-build-android"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+walkdir = "2.3.1"
+dirs = "3.0.1"

@@ -1,13 +1,19 @@
+//! Wrapper around Cargo that is currently still used by the iOS implementation.
+
 use cargo_metadata::{Message, Metadata, MetadataCommand};
 use std::io::{BufReader, Error};
 use std::path::PathBuf;
 use std::process::{Command, Stdio};
 
+/// Reads the metadata stored in the `Cargo.toml` file of the current working
+/// directory. Note that this does not support `--manifest-path`.
 pub fn metadata() -> Result<Metadata, Error> {
     let command = MetadataCommand::new();
     Ok(command.exec().unwrap())
 }
 
+/// Build function that is currently still used by the iOS implementation. Note
+/// that this does not support `--manifest-path`.
 pub fn build() -> Result<PathBuf, Error> {
     let metadata = metadata()?;
     let root_id = metadata.resolve.unwrap().root.unwrap();

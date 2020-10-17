@@ -7,23 +7,32 @@ license = "MIT"
 description = "Library with CLI for Polyhorn."
 repository = "https://github.com/polyhorn/polyhorn/tree/crates/polyhorn-cli"
 
+[[bin]]
+name = "polyhorn-cli"
+
 [lib]
 
 [dependencies]
+ansi_term = "0.12.1"
 cargo_metadata = "0.11.2"
 clap = "=3.0.0-beta.1"
 clap_derive = "=3.0.0-beta.1"
-console = "0.11.3"
+console = "0.12.0"
 dialoguer = "0.6.2"
+indicatif = "0.15.0"
 notify = "4.0.15"
+path-absolutize = "3.0.6"
 plist = "1.0.0"
 resvg = "0.11.0"
 serde = { version = "1.0.116", features = ["derive"] }
 serde_json = "1.0.57"
 serde_yaml = "0.8.13"
 smart-default = "0.6.0"
+tinytemplate = "1.1.0"
 toml = "0.5.6"
 usvg = "0.11.0"
+dirs = "3.0.1"
+cargo = "0.48.0"
 
 [workspace]
 members = []
