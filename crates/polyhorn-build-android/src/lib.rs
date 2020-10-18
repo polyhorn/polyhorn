@@ -35,17 +35,8 @@ pub fn build() {
         return;
     }
 
-    // TODO: this currently hardcodes the Java home to within Android Studio on
-    // macOS. We should use the same locator heuristics as Polyhorn CLI does,
-    // or maybe pass through the Java home that Polyhorn CLI found in
-    // `JAVA_HOME`.
-    let java_home =
-        Path::new("/Applications/Android Studio.app/Contents/jre/jdk/Contents/Home").to_path_buf();
-    let android_sdk_root = Path::new(&format!(
-        "{}/Library/Android/sdk/",
-        dirs::home_dir().unwrap().to_str().unwrap()
-    ))
-    .to_path_buf();
+    let java_home = Path::new(&std::env::var("JAVA_HOME").unwrap()).to_path_buf();
+    let android_sdk_root = Path::new(&std::env::var("ANDROID_SDK_ROOT").unwrap()).to_path_buf();
 
     let mut android_jar = android_sdk_root.clone();
     android_jar.push("platforms/android-30/android.jar");

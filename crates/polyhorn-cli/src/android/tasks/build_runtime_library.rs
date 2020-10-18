@@ -154,6 +154,14 @@ impl Task for BuildRuntimeLibrary {
         // Cargo wants to start at a new line.
         eprintln!("");
 
+        if let Some(android_sdk_root) = context.android_sdk_root.as_ref() {
+            std::env::set_var("ANDROID_SDK_ROOT", android_sdk_root);
+        }
+
+        if let Some(java_home) = context.java_home.as_ref() {
+            std::env::set_var("JAVA_HOME", java_home);
+        }
+
         let result = self.build(&toolchain, &manifest_path, &polyhorn_jar_dir);
 
         match result {
