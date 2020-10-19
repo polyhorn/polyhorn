@@ -47,13 +47,34 @@ where
 {
     fn use_effect<F>(&mut self, key: Key, conditions: Option<Key>, effect: F)
     where
-        F: FnOnce(&EffectLink<P>, &mut P::CommandBuffer) + 'static;
+        F: FnOnce(&EffectLink<P>) + 'static;
 }
 
 #[macro_export]
 macro_rules! use_effect {
     ($manager:expr, $effect:expr) => {
         $crate::UseEffect::use_effect($manager, $crate::use_id!().into(), None, $effect)
+    };
+}
+
+pub trait UseLayoutEffect<P>
+where
+    P: Platform + ?Sized,
+{
+    fn use_layout_effect<F>(&mut self, key: Key, conditions: Option<Key>, effect: F)
+    where
+        F: FnOnce(&EffectLink<P>, &mut P::CommandBuffer) + 'static;
+}
+
+#[macro_export]
+macro_rules! use_layout_effect {
+    ($manager:expr, $effect:expr) => {
+        $crate::UseLayoutEffect::use_layout_effect(
+            $manager,
+            $crate::use_id!().into(),
+            None,
+            $effect,
+        )
     };
 }
 

@@ -13,8 +13,8 @@ pub mod raw;
 /// Re-exports of hooks provided by Polyhorn Core and Polyhorn UI.
 pub mod hooks {
     pub use polyhorn_core::{
-        use_async, use_context, use_effect, use_id, use_reference, use_state, UseAsync, UseContext,
-        UseEffect, UseReference,
+        use_async, use_context, use_effect, use_id, use_layout_effect, use_reference, use_state,
+        UseAsync, UseContext, UseEffect, UseLayoutEffect, UseReference,
     };
     pub use polyhorn_ui::hooks::*;
 }

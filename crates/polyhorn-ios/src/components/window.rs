@@ -56,7 +56,7 @@ impl Component for Window {
             }
         });
 
-        use_effect!(manager, move |link, buffer| {
+        use_layout_effect!(manager, move |link, buffer| {
             let id = match reference.apply(link, |id| id.to_owned()) {
                 Some(id) => id,
                 None => return,

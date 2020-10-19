@@ -41,7 +41,7 @@ impl Component for TextInput {
         let placeholder = self.placeholder.clone();
         let placeholder_style = self.placeholder_style.clone();
 
-        use_effect!(manager, move |link, buffer| {
+        use_layout_effect!(manager, move |link, buffer| {
             let id = match view_ref.apply(link, |&mut id| id) {
                 Some(id) => id,
                 None => return,

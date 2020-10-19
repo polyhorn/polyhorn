@@ -38,7 +38,7 @@ impl Component for Image {
         let image_source = self.source.clone();
         let tint_color = self.style.image.tint_color.clone();
 
-        use_effect!(manager, move |link, buffer| {
+        use_layout_effect!(manager, move |link, buffer| {
             let id = match view_ref.apply(link, |id| id.to_owned()) {
                 Some(id) => id,
                 None => return,

@@ -72,7 +72,7 @@ impl Component for KeyboardAvoidingView {
 
         let transform = self.transform.clone();
 
-        use_effect!(manager, move |link, buffer| {
+        use_layout_effect!(manager, move |link, buffer| {
             let id = match view_ref.apply(link, |id| id.to_owned()) {
                 Some(id) => id,
                 None => return,

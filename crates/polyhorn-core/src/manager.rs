@@ -1,7 +1,7 @@
-use super::hooks::{UseAsync, UseContext, UseEffect, UseReference, UseState};
+use super::hooks::{UseAsync, UseContext, UseEffect, UseLayoutEffect, UseReference, UseState};
 use super::{
-    Context, ContextTree, EffectLink, Element, EventLoop, Instance, Key, Link, Memory, Platform,
-    Reference, State, Weak, WeakLink,
+    Context, ContextTree, Effect, EffectLink, Element, EventLoop, Instance, Key, LayoutEffect,
+    Link, Memory, Platform, Reference, State, Weak, WeakLink,
 };
 use serde::{Deserialize, Serialize};
 use std::future::Future;
@@ -16,7 +16,8 @@ where
     memory: &'a mut Memory,
     context: &'a ContextTree,
     children: Element<P>,
-    effects: Vec<Box<dyn FnOnce(&EffectLink<P>, &mut P::CommandBuffer)>>,
+    effects: Vec<Effect<P>>,
+    layout_effects: Vec<LayoutEffect<P>>,
     instance: &'a Rc<Instance<P>>,
 }
 
@@ -39,6 +40,7 @@ where
             context,
             children,
             effects: vec![],
+            layout_effects: vec![],
             instance,
         }
     }
@@ -62,10 +64,8 @@ where
         }
     }
 
-    pub(crate) fn into_effects(
-        self,
-    ) -> Vec<Box<dyn FnOnce(&EffectLink<P>, &mut P::CommandBuffer)>> {
-        self.effects
+    pub(crate) fn into_effects(self) -> (Vec<Effect<P>>, Vec<LayoutEffect<P>>) {
+        (self.effects, self.layout_effects)
     }
 }
 
@@ -100,6 +100,24 @@ where
 {
     fn use_effect<F>(&mut self, key: Key, conditions: Option<Key>, effect: F)
     where
+        F: FnOnce(&EffectLink<P>) + 'static,
+    {
+        if let Some(conditions) = conditions {
+            if !self.memory.effect(key, conditions) {
+                return;
+            }
+        }
+
+        self.effects.push(Effect::new(self.instance, effect))
+    }
+}
+
+impl<'a, P> UseLayoutEffect<P> for Manager<'a, P>
+where
+    P: Platform + ?Sized,
+{
+    fn use_layout_effect<F>(&mut self, key: Key, conditions: Option<Key>, effect: F)
+    where
         F: FnOnce(&EffectLink<P>, &mut P::CommandBuffer) + 'static,
     {
         if let Some(conditions) = conditions {
@@ -108,7 +126,8 @@ where
             }
         }
 
-        self.effects.push(Box::new(effect))
+        let effect = LayoutEffect::new(self.instance, effect);
+        self.layout_effects.push(effect)
     }
 }
 

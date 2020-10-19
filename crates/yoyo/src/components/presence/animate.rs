@@ -80,7 +80,7 @@ where
 
         let snapshot = memory.apply(manager, |memory| memory.to_owned());
 
-        use_effect!(manager, move |link, _| {
+        use_effect!(manager, move |link| {
             is_animated.replace(link, true);
         });
 

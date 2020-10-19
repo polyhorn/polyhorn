@@ -95,7 +95,7 @@ impl Component for View {
             }
         });
 
-        use_effect!(manager, move |link, buffer| {
+        use_layout_effect!(manager, move |link, buffer| {
             let id = match view_ref.apply(link, |view| view.to_owned()) {
                 Some(id) => id,
                 None => return,

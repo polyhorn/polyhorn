@@ -75,7 +75,7 @@ impl Component for Text {
 
         let texts = collect_texts(&self.style, &manager.children());
 
-        use_effect!(manager, move |link, buffer| {
+        use_layout_effect!(manager, move |link, buffer| {
             let id = match label_ref.apply(link, |label| label.to_owned()) {
                 Some(id) => id,
                 None => return,

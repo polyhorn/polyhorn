@@ -1,7 +1,7 @@
 use super::element::{ElementBuiltin, ElementComponent, ElementContext, ElementFragment};
 use super::{
-    CommandBuffer, Component, Compositor, Disposable, EffectLink, Element, EventLoop, Instance,
-    Manager, Platform,
+    CommandBuffer, Component, Compositor, Disposable, Effect, EffectLink, Element, EventLoop,
+    Instance, LayoutEffect, Manager, Platform,
 };
 use std::cell::RefCell;
 use std::ops::DerefMut;
@@ -13,6 +13,8 @@ where
 {
     renderer: Rc<Renderer<P>>,
     buffer: P::CommandBuffer,
+    layout_effects: Vec<LayoutEffect<P>>,
+    effects: Vec<Effect<P>>,
 }
 
 impl<P> Render<P>
@@ -26,7 +28,12 @@ where
             .expect("Couldn't acquire new command buffer from busy compositor.")
             .buffer();
 
-        Render { renderer, buffer }
+        Render {
+            renderer,
+            buffer,
+            layout_effects: vec![],
+            effects: vec![],
+        }
     }
 
     fn rerender_builtin(&mut self, instance: &Rc<Instance<P>>, element: ElementBuiltin<P>) {
@@ -34,7 +41,7 @@ where
     }
 
     fn rerender_component(&mut self, instance: &Rc<Instance<P>>, element: ElementComponent<P>) {
-        let (edges, effects) = {
+        let (edges, (effects, layout_effects)) = {
             let mut memory = instance.memory_mut();
             let compositor = self
                 .renderer
@@ -62,12 +69,8 @@ where
 
         self.rerender_edges(instance, edges);
 
-        // Finally, we apply the effects and we're done!
-        let memory = instance.memory();
-        let link = EffectLink::new(&instance, &memory);
-        for effect in effects {
-            effect(&link, &mut self.buffer);
-        }
+        self.effects.extend(effects);
+        self.layout_effects.extend(layout_effects);
     }
 
     fn rerender_context(&mut self, instance: &Rc<Instance<P>>, element: ElementContext<P>) {
@@ -182,6 +185,31 @@ where
 
         instance
     }
+
+    pub fn finish(mut self) {
+        // Finally, we apply the effects and we're done!
+        for effect in self.layout_effects.into_iter() {
+            let instance = effect.instance().clone();
+            let memory = instance.memory();
+            let link = EffectLink::new(&instance, &memory);
+
+            effect.invoke(&link, &mut self.buffer);
+        }
+
+        self.buffer.commit();
+
+        let effects = self.effects;
+
+        self.renderer.bus.borrow().queue_retain(async move {
+            for effect in effects.into_iter() {
+                let instance = effect.instance().clone();
+                let memory = instance.memory();
+                let link = EffectLink::new(&instance, &memory);
+
+                effect.invoke(&link);
+            }
+        });
+    }
 }
 
 pub struct Renderer<P>
@@ -212,7 +240,7 @@ where
         self.bus.borrow().queue_retain(async move {
             let mut render = Render::new(renderer);
             render.rerender(&instance);
-            render.buffer.commit();
+            render.finish();
         });
     }
 
@@ -223,7 +251,7 @@ where
     ) -> Rc<Instance<P>> {
         let mut render = Render::new(self.clone());
         let instance = render.render(None, element, container);
-        render.buffer.commit();
+        render.finish();
 
         instance
     }

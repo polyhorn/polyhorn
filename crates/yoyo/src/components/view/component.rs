@@ -163,7 +163,7 @@ where
             }
         });
 
-        use_effect!(manager, move |link, buffer| {
+        use_layout_effect!(manager, move |link, buffer| {
             state.apply(link, move |state| {
                 if state.variant == variant {
                     return;

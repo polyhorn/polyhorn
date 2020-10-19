@@ -7,7 +7,7 @@ impl Component for Window {
     fn render(&self, manager: &mut Manager) -> Element {
         let reference = use_reference!(manager, None);
 
-        use_effect!(manager, move |link, buffer| {
+        use_layout_effect!(manager, move |link, buffer| {
             if let Some(view) = reference.apply(link, |&mut id| id) {
                 buffer.mutate(&[view], |views, environment| {
                     if let Some(view) = views[0].downcast_mut::<polyhorn_android_sys::View>() {
