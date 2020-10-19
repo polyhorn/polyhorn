@@ -89,7 +89,6 @@ impl BuildRuntimeLibrary {
             // We statically link to libc++.
             "-Clink-arg=-lc++_static".to_owned(),
             "-Clink-arg=-lc++abi".to_owned(),
-            "-Clink-arg=-landroid".to_owned(),
             "-Clink-arg=-fuse-ld=lld".to_owned(),
         ]);
         options.build_config.requested_profile = InternedString::new(self.profile);
