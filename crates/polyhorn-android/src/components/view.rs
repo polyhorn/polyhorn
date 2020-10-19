@@ -1,3 +1,4 @@
+use polyhorn_android_sys::Rect;
 use polyhorn_core::CommandBuffer;
 use polyhorn_ui::geometry::Size;
 use polyhorn_ui::layout::LayoutGuide;
@@ -94,9 +95,20 @@ impl Component for View {
         use_layout_effect!(manager, move |link, buffer| {
             if let Some(view) = reference.apply(link, |&mut id| id) {
                 buffer.mutate(&[view], |views, environment| {
+                    let layout = views[0].layout().unwrap().current();
+
                     if let Some(view) = views[0].downcast_mut::<polyhorn_android_sys::View>() {
                         view.set_background_color(environment.env(), 0, 255, 0, 1.0);
-                        view.set_frame(environment.env(), 20.0, 20.0, 200.0, 300.0);
+                        view.set_frame(
+                            environment.env(),
+                            Rect::new(
+                                environment.env(),
+                                layout.origin.x,
+                                layout.origin.y,
+                                layout.size.width,
+                                layout.size.height,
+                            ),
+                        );
                     }
                 });
             }
@@ -104,7 +116,7 @@ impl Component for View {
 
         Element::builtin(
             Key::new(()),
-            Builtin::View,
+            Builtin::View(self.style),
             manager.children(),
             Some(reference.weak(manager)),
         )

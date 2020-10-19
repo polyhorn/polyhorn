@@ -81,7 +81,9 @@ impl polyhorn_core::CommandBuffer<Platform> for CommandBuffer {
     }
 
     fn layout(&mut self) {
-        // No-op on Android, currently.
+        self.mutate(&[], |_, environment| {
+            environment.layout_tree().write().unwrap().recompute_roots();
+        });
     }
 
     fn commit(mut self) {

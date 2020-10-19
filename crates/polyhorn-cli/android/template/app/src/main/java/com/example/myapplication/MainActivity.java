@@ -1,13 +1,20 @@
 package { spec.app.android.package };
 
 import android.os.Bundle;
+import android.util.DisplayMetrics;
 import android.view.Menu;
 import android.view.MenuItem;
 import androidx.appcompat.app.AppCompatActivity;
 import com.glacyr.polyhorn.Application;
+import com.glacyr.polyhorn.Rect;
 import com.glacyr.polyhorn.View;
 
 public class MainActivity extends AppCompatActivity \{
+    public Rect getBounds() \{
+        DisplayMetrics metrics = this.getResources().getDisplayMetrics();
+        return new Rect(0.0f, 0.0f, metrics.widthPixels / metrics.density, metrics.heightPixels / metrics.density);
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) \{
         super.onCreate(savedInstanceState);

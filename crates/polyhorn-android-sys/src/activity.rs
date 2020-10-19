@@ -1,7 +1,7 @@
 use jni::objects::{JObject, JValue};
 use jni::sys::{jobject, JNIEnv};
 
-use super::{Context, Env, Object, Reference, View};
+use super::{Context, Env, Object, Rect, Reference, View};
 
 #[derive(Clone)]
 pub struct Activity {
@@ -12,6 +12,20 @@ impl Activity {
     pub unsafe fn with_env(env: *mut JNIEnv, object: jobject) -> Activity {
         Activity {
             reference: Env::new(env).retain(JObject::from(object)),
+        }
+    }
+
+    pub fn bounds(&self, env: &Env) -> Rect {
+        unsafe {
+            match env.call_method(
+                self.reference.as_object(),
+                "getBounds",
+                "()Lcom/glacyr/polyhorn/Rect;",
+                &[],
+            ) {
+                JValue::Object(value) => Rect::from_reference(env.retain(value)),
+                _ => unreachable!(),
+            }
         }
     }
 

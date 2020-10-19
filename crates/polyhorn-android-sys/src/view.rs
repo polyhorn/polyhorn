@@ -1,6 +1,6 @@
 use jni::objects::JValue;
 
-use super::{Context, Env, Object, Reference};
+use super::{Context, Env, Object, Rect, Reference};
 
 #[derive(Clone)]
 pub struct View {
@@ -41,19 +41,28 @@ impl View {
         }
     }
 
-    pub fn set_frame(&mut self, env: &Env, x: f32, y: f32, width: f32, height: f32) {
+    pub fn set_frame(&mut self, env: &Env, frame: Rect) {
         unsafe {
             env.call_method(
                 self.reference.as_object(),
                 "setFrame",
-                "(FFFF)V",
-                &[
-                    JValue::Float(x),
-                    JValue::Float(y),
-                    JValue::Float(width),
-                    JValue::Float(height),
-                ],
+                "(Lcom/glacyr/polyhorn/Rect;)V",
+                &[JValue::Object(frame.as_reference().as_object())],
             );
+        }
+    }
+
+    pub fn bounds(&self, env: &Env) -> Rect {
+        unsafe {
+            match env.call_method(
+                self.reference.as_object(),
+                "getBounds",
+                "()Lcom/glacyr/polyhorn/Rect;",
+                &[],
+            ) {
+                JValue::Object(value) => Rect::from_reference(env.retain(value)),
+                _ => unreachable!(),
+            }
         }
     }
 

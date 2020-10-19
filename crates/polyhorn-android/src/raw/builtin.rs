@@ -1,23 +1,24 @@
-use polyhorn_android_sys::View;
+use polyhorn_android_sys::{Activity, View};
 use polyhorn_ui::layout::LayoutNode;
+use polyhorn_ui::styles::ViewStyle;
 
 use super::{Container, Environment, OpaqueContainer, Platform};
 
-#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug)]
 pub enum Builtin {
     ImageView,
     KeyboardAvoidingView,
     Label,
     ScrollView,
     TextInput,
-    View,
+    View(ViewStyle),
     Window,
 }
 
 impl polyhorn_core::Builtin<Platform> for Builtin {
     fn instantiate(
         &self,
-        _parent: &mut OpaqueContainer,
+        parent: &mut OpaqueContainer,
         environment: &mut Environment,
     ) -> OpaqueContainer {
         let layout = match self {
@@ -26,10 +27,37 @@ impl polyhorn_core::Builtin<Platform> for Builtin {
         };
 
         let view = View::new(environment.env(), environment.activity());
-        return OpaqueContainer::new(layout, None, view);
+
+        match self {
+            Builtin::Window => {
+                if let Some(activity) = parent.downcast_mut::<Activity>() {
+                    let frame = activity.bounds(environment.env());
+                    log::error!("Activity frame: {:#?}", frame.width(environment.env()));
+                }
+
+                environment
+                    .layout_tree()
+                    .write()
+                    .unwrap()
+                    .roots_mut()
+                    .push(layout.node())
+            }
+            _ => {}
+        }
+
+        let container = OpaqueContainer::new(layout, None, view);
+
+        container
     }
 
-    fn update(&self, _container: &mut OpaqueContainer) {}
+    fn update(&self, container: &mut OpaqueContainer) {
+        match self {
+            &Builtin::View(style) => {
+                container.layout().unwrap().set_style(style);
+            }
+            _ => {}
+        }
+    }
 }
 
 impl Container for polyhorn_android_sys::Activity {

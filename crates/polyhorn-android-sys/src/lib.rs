@@ -1,6 +1,7 @@
 mod activity;
 mod bridge;
 mod context;
+mod geometry;
 mod logger;
 mod reference;
 mod runnable;
@@ -10,6 +11,7 @@ mod view;
 pub use activity::Activity;
 pub use bridge::{Env, Object, VM};
 pub use context::Context;
+pub use geometry::Rect;
 pub use logger::{android_log_write, AndroidLogPriority};
 pub use reference::Reference;
 pub use runnable::Runnable;
