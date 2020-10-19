@@ -1,4 +1,6 @@
-use super::{Bus, CommandBuffer, Component, Compositor, Disposable};
+use std::hash::Hash;
+
+use super::{Bus, CommandBuffer, Component, Compositor, Container, Disposable};
 
 /// This is a platform that needs to be implemented by every render host.
 pub trait Platform: 'static {
@@ -6,12 +8,12 @@ pub trait Platform: 'static {
 
     /// This is a virtual container that renders a built-in. These containers
     /// should be thread-safe (e.g. `Send + Sync`).
-    type ContainerID: Copy + Send;
+    type ContainerID: Copy + Eq + Hash + Send;
 
     /// This is a native container that renders a built-in. For example, this can
     /// be an UIView or a div. Native containers are usually not thread-safe and
     /// reside only on the main thread.
-    type Container;
+    type Container: Container<Self>;
 
     type Component: Component<Self>;
 

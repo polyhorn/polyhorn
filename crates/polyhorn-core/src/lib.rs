@@ -23,7 +23,7 @@ mod weak;
 pub use builtin::Builtin;
 pub use bus::Bus;
 pub use component::Component;
-pub use compositor::{CommandBuffer, Compositor};
+pub use compositor::{Command, CommandBuffer, Composition, Compositor};
 pub use container::Container;
 pub use context::{Context, ContextProvider, ContextTree};
 pub use disposable::Disposable;

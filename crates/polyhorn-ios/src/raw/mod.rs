@@ -19,7 +19,7 @@ pub use apply::Apply;
 pub use builtin::Builtin;
 pub use bus::Bus;
 pub use component::{Component, OpaqueComponent};
-pub use compositor::{Command, CommandBuffer, Compositor, ContainerID};
+pub use compositor::{CommandBuffer, Compositor, ContainerID};
 pub use container::{Container, OpaqueContainer};
 pub use convert::Convert;
 pub use environment::Environment;

@@ -1,62 +1,16 @@
 use dispatch::Queue;
-use polyhorn_core::Container;
-use std::cell::RefCell;
-use std::collections::HashMap;
+use polyhorn_core::{Command, Composition};
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, RwLock};
 
 use super::{Environment, Layouter, OpaqueContainer, Platform, QueueBound};
-
-#[derive(Default)]
-pub struct Composition {
-    map: HashMap<ContainerID, RefCell<OpaqueContainer>>,
-}
-
-impl Composition {
-    pub fn process(&mut self, environment: &mut Environment, command: Command) {
-        match command {
-            Command::Mount(id, parent_id, initializer) => {
-                let container = if let Some(parent) = self.map.get_mut(&parent_id) {
-                    let mut parent = parent.borrow_mut();
-                    let mut container = initializer(&mut *parent, environment);
-                    parent.mount(&mut container, environment);
-                    container
-                } else {
-                    return;
-                };
-
-                self.map.insert(id, RefCell::new(container));
-            }
-            Command::Mutate(ids, mutation) => {
-                let borrows = ids
-                    .into_iter()
-                    .map(|id| self.map.get(&id).map(|container| container.borrow_mut()))
-                    .collect::<Option<Vec<_>>>();
-
-                if let Some(mut borrows) = borrows {
-                    let mut containers = borrows
-                        .iter_mut()
-                        .map(|borrow| &mut **borrow)
-                        .collect::<Vec<_>>();
-
-                    mutation(containers.as_mut_slice(), environment);
-                }
-            }
-            Command::Unmount(id) => {
-                if let Some(container) = self.map.remove(&id) {
-                    container.borrow_mut().unmount();
-                }
-            }
-        }
-    }
-}
 
 /// Concrete implementation of a compositor that is responsible for adding and
 /// removing native views from the native view hierarchy based on the virtual
 /// representation within Polyhorn.
 #[derive(Clone)]
 pub struct Compositor {
-    buffer: Arc<QueueBound<Composition>>,
+    buffer: Arc<QueueBound<Composition<Platform>>>,
     counter: Arc<AtomicUsize>,
     layouter: Arc<RwLock<Layouter>>,
 }
@@ -81,7 +35,7 @@ impl Compositor {
 
         unsafe {
             self.buffer.with_adopt(container, move |state, container| {
-                state.map.insert(id, RefCell::new(container));
+                state.insert(id, container);
             });
         }
 
@@ -102,33 +56,11 @@ impl polyhorn_core::Compositor<Platform> for Compositor {
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
 pub struct ContainerID(usize);
 
-/// A command that can be send from any thread and will be executed on the
-/// main thread.
-pub enum Command {
-    /// Initializes the container that corresponds to the second container ID
-    /// with the given initialization closure and mounts the second given
-    /// container ID onto the first given container ID.
-    Mount(
-        ContainerID,
-        ContainerID,
-        Box<dyn FnOnce(&mut OpaqueContainer, &mut Environment) -> OpaqueContainer + Send>,
-    ),
-
-    /// Applies a closure to all containers with the given IDs.
-    Mutate(
-        Vec<ContainerID>,
-        Box<dyn FnOnce(&mut [&mut OpaqueContainer], &mut Environment) + Send>,
-    ),
-
-    /// Unmounts a container with the given ID.
-    Unmount(ContainerID),
-}
-
 /// Concrete implementation of a command buffer that can buffer commands before
 /// committing them to the compositor.
 pub struct CommandBuffer {
     compositor: Compositor,
-    commands: Vec<Command>,
+    commands: Vec<Command<Platform>>,
 }
 
 impl polyhorn_core::CommandBuffer<Platform> for CommandBuffer {
