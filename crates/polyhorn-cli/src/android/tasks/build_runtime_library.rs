@@ -99,7 +99,7 @@ impl BuildRuntimeLibrary {
         match compile(&workspace, &options) {
             Ok(mut compilation) => Ok(compilation.cdylibs.remove(0).1),
             Err(error) => {
-                eprintln!("{}: {}", Red.bold().paint("error"), error);
+                eprintln!("{}: {:?}", Red.bold().paint("error"), error);
                 Err(AndroidError::CompilationFailure)
             }
         }

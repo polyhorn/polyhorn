@@ -46,29 +46,27 @@ pub fn build() {
         android_jar,
     };
 
-    for file in files {
-        let mut javac = config.java_home.clone();
-        javac.push("bin/javac");
+    let mut javac = config.java_home.clone();
+    javac.push("bin/javac");
 
-        let mut bootclasspath = config.java_home.clone();
-        bootclasspath.push("jre/lib/rt.jar");
+    let mut bootclasspath = config.java_home.clone();
+    bootclasspath.push("jre/lib/rt.jar");
 
-        let mut destination_dir = Path::new(&std::env::var_os("OUT_DIR").unwrap()).to_path_buf();
-        destination_dir.push("android");
+    let mut destination_dir = Path::new(&std::env::var_os("OUT_DIR").unwrap()).to_path_buf();
+    destination_dir.push("android");
 
-        let _ = create_dir_all(&destination_dir);
+    let _ = create_dir_all(&destination_dir);
 
-        let mut command = Command::new(javac);
-        command.args(&["-source", "1.8", "-target", "1.8", "-bootclasspath"]);
-        command.arg(&bootclasspath);
-        command.arg("-classpath");
-        command.arg(&config.android_jar);
-        command.arg("-d");
-        command.arg(&destination_dir);
-        command.arg(&file);
-        command.stdout(Stdio::piped());
-        assert!(command.spawn().unwrap().wait().unwrap().success());
-    }
+    let mut command = Command::new(javac);
+    command.args(&["-source", "1.8", "-target", "1.8", "-bootclasspath"]);
+    command.arg(&bootclasspath);
+    command.arg("-classpath");
+    command.arg(&config.android_jar);
+    command.arg("-d");
+    command.arg(&destination_dir);
+    command.args(&files);
+    command.stdout(Stdio::piped());
+    assert!(command.spawn().unwrap().wait().unwrap().success());
 
     let mut jar = config.java_home.clone();
     jar.push("bin/jar");
