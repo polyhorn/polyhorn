@@ -81,7 +81,7 @@ impl Component for Text {
                 None => return,
             };
 
-            buffer.mutate(&[id], move |containers| {
+            buffer.mutate(&[id], move |containers, _| {
                 let container = &mut containers[0];
 
                 let attributed_string = transform_texts(texts);

@@ -81,7 +81,7 @@ impl Component for KeyboardAvoidingView {
             let is_first_render = is_subsequent_render.apply(link, |is| is.to_owned());
             is_subsequent_render.replace(link, true);
 
-            buffer.mutate(&[id], move |containers| {
+            buffer.mutate(&[id], move |containers, _| {
                 let container = &mut containers[0];
 
                 let layout = match container.layout() {

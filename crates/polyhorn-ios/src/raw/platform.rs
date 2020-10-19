@@ -17,12 +17,7 @@ impl polyhorn_core::Platform for Platform {
 
     fn with_compositor<F>(container: Self::Container, task: F) -> polyhorn_core::Disposable
     where
-        F: FnOnce(
-                Self::ContainerID,
-                Self::Compositor,
-                Self::Bus,
-                Self::Environment,
-            ) -> polyhorn_core::Disposable
+        F: FnOnce(Self::ContainerID, Self::Compositor, Self::Bus) -> polyhorn_core::Disposable
             + Send
             + 'static,
     {
@@ -39,7 +34,7 @@ impl polyhorn_core::Platform for Platform {
                 runtime.block_on(async move {
                     let (bus, handler) = Bus::new();
                     let _compositor = compositor.clone();
-                    let _result = task(id, compositor, bus, Environment::new(layouter));
+                    let _result = task(id, compositor, bus);
 
                     handler.main().await;
                 })

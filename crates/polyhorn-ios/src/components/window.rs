@@ -62,7 +62,7 @@ impl Component for Window {
                 None => return,
             };
 
-            buffer.mutate(&[id], move |containers| {
+            buffer.mutate(&[id], move |containers, _| {
                 let container = &mut containers[0];
 
                 let frame = match container.downcast_mut::<PLYWindow>() {

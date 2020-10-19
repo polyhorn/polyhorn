@@ -19,11 +19,9 @@ pub trait Platform: 'static {
 
     type CommandBuffer: CommandBuffer<Self>;
 
-    type Environment: Send + Sync;
+    type Environment;
 
     fn with_compositor<F>(container: Self::Container, task: F) -> Disposable
     where
-        F: FnOnce(Self::ContainerID, Self::Compositor, Self::Bus, Self::Environment) -> Disposable
-            + Send
-            + 'static;
+        F: FnOnce(Self::ContainerID, Self::Compositor, Self::Bus) -> Disposable + Send + 'static;
 }

@@ -6,7 +6,6 @@ use super::{
 use std::cell::RefCell;
 use std::ops::DerefMut;
 use std::rc::Rc;
-use std::sync::{Arc, Mutex};
 
 pub struct Render<P>
 where
@@ -160,9 +159,8 @@ where
         let container = match &element {
             Element::Builtin(element) => {
                 let builtin = element.builtin.clone();
-                let environment = self.renderer.environment.clone();
-                let container = self.buffer.mount(in_container, move || {
-                    builtin.instantiate(&mut *environment.lock().unwrap())
+                let container = self.buffer.mount(in_container, move |parent, environment| {
+                    builtin.instantiate(parent, environment)
                 });
 
                 if let Some(reference) = &element.reference {
@@ -192,7 +190,6 @@ where
 {
     compositor: RefCell<P::Compositor>,
     bus: RefCell<P::Bus>,
-    environment: Arc<Mutex<P::Environment>>,
 }
 
 impl<P> Renderer<P>
@@ -201,15 +198,10 @@ where
 {
     /// This function returns a new reference counted renderer with the given
     /// compositor.
-    pub fn new(
-        compositor: P::Compositor,
-        bus: P::Bus,
-        environment: P::Environment,
-    ) -> Rc<Renderer<P>> {
+    pub fn new(compositor: P::Compositor, bus: P::Bus) -> Rc<Renderer<P>> {
         Rc::new(Renderer {
             compositor: RefCell::new(compositor),
             bus: RefCell::new(bus),
-            environment: Arc::new(Mutex::new(environment)),
         })
     }
 
@@ -245,12 +237,9 @@ where
     F: FnOnce() -> Element<P> + Send + 'static,
     P: Platform + ?Sized,
 {
-    P::with_compositor(
-        container,
-        move |container_id, compositor, bus, environment| {
-            // We've now switched to the render thread.
-            let renderer = Renderer::new(compositor, bus, environment);
-            Disposable::new(renderer.render(element(), container_id))
-        },
-    )
+    P::with_compositor(container, move |container_id, compositor, bus| {
+        // We've now switched to the render thread.
+        let renderer = Renderer::new(compositor, bus);
+        Disposable::new(renderer.render(element(), container_id))
+    })
 }

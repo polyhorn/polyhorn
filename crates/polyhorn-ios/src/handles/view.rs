@@ -34,7 +34,7 @@ impl polyhorn_ui::handles::ViewHandle for ViewHandle {
             None => return,
         };
 
-        buffer.mutate(&[id], move |containers| {
+        buffer.mutate(&[id], move |containers, _| {
             let container = &mut containers[0];
 
             if let Some(layout) = container.layout() {
@@ -71,7 +71,7 @@ impl polyhorn_ui::animation::Animatable for ViewHandle {
         };
 
         // Add a mutation of the container to the command buffer.
-        buffer.mutate(&[container_id], |containers| {
+        buffer.mutate(&[container_id], |containers, _| {
             if let Some(view) = containers[0].container().to_view() {
                 animations(&mut Animator::new(view));
             }

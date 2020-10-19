@@ -62,7 +62,7 @@ impl Component for Image {
             let width = Dimension::Points(image.size.width);
             let height = Dimension::Points(image.size.height);
 
-            buffer.mutate(&[id], move |containers| {
+            buffer.mutate(&[id], move |containers, _| {
                 let container = &mut containers[0];
 
                 let layout = match container.layout() {

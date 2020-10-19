@@ -9,7 +9,7 @@ impl Component for StatusBar {
         let style = self.style;
 
         use_effect!(manager, move |_, buffer| {
-            buffer.mutate(&[], move |_| {
+            buffer.mutate(&[], move |_, _| {
                 let window = PLYWindow::key_window();
                 let mut status_bar = PLYStatusBar::new(&window);
                 status_bar.set_style(match style {

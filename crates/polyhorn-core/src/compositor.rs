@@ -10,11 +10,11 @@ where
     /// [Container::Mount](Container::Mount)).
     fn mount<F>(&mut self, parent_id: P::ContainerID, initializer: F) -> P::ContainerID
     where
-        F: FnOnce() -> P::Container + Send + 'static;
+        F: FnOnce(&mut P::Container, &mut P::Environment) -> P::Container + Send + 'static;
 
     fn mutate<F>(&mut self, ids: &[P::ContainerID], mutator: F)
     where
-        F: FnOnce(&mut [&mut P::Container]) + Send + 'static;
+        F: FnOnce(&mut [&mut P::Container], &mut P::Environment) + Send + 'static;
 
     fn unmount(&mut self, id: P::ContainerID);
 

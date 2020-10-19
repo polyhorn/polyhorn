@@ -51,7 +51,11 @@ impl Container for UIApplication {
 }
 
 impl polyhorn_core::Builtin<Platform> for Builtin {
-    fn instantiate(&self, environment: &mut Environment) -> OpaqueContainer {
+    fn instantiate(
+        &self,
+        _parent: &mut OpaqueContainer,
+        environment: &mut Environment,
+    ) -> OpaqueContainer {
         let layout = match self {
             Builtin::Label => Layout::leaf(environment.layouter().clone()),
             _ => Layout::new(environment.layouter().clone()),

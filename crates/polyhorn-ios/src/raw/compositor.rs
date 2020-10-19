@@ -5,7 +5,7 @@ use std::collections::HashMap;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, RwLock};
 
-use super::{Layouter, OpaqueContainer, Platform, QueueBound};
+use super::{Environment, Layouter, OpaqueContainer, Platform, QueueBound};
 
 #[derive(Default)]
 pub struct Composition {
@@ -13,14 +13,17 @@ pub struct Composition {
 }
 
 impl Composition {
-    pub fn process(&mut self, command: Command) {
+    pub fn process(&mut self, environment: &mut Environment, command: Command) {
         match command {
             Command::Mount(id, parent_id, initializer) => {
-                let mut container = initializer();
-
-                if let Some(parent) = self.map.get_mut(&parent_id) {
-                    parent.borrow_mut().mount(&mut container);
-                }
+                let container = if let Some(parent) = self.map.get_mut(&parent_id) {
+                    let mut parent = parent.borrow_mut();
+                    let mut container = initializer(&mut *parent, environment);
+                    parent.mount(&mut container, environment);
+                    container
+                } else {
+                    return;
+                };
 
                 self.map.insert(id, RefCell::new(container));
             }
@@ -36,7 +39,7 @@ impl Composition {
                         .map(|borrow| &mut **borrow)
                         .collect::<Vec<_>>();
 
-                    mutation(containers.as_mut_slice());
+                    mutation(containers.as_mut_slice(), environment);
                 }
             }
             Command::Unmount(id) => {
@@ -108,13 +111,13 @@ pub enum Command {
     Mount(
         ContainerID,
         ContainerID,
-        Box<dyn FnOnce() -> OpaqueContainer + Send>,
+        Box<dyn FnOnce(&mut OpaqueContainer, &mut Environment) -> OpaqueContainer + Send>,
     ),
 
     /// Applies a closure to all containers with the given IDs.
     Mutate(
         Vec<ContainerID>,
-        Box<dyn FnOnce(&mut [&mut OpaqueContainer]) + Send>,
+        Box<dyn FnOnce(&mut [&mut OpaqueContainer], &mut Environment) + Send>,
     ),
 
     /// Unmounts a container with the given ID.
@@ -131,7 +134,7 @@ pub struct CommandBuffer {
 impl polyhorn_core::CommandBuffer<Platform> for CommandBuffer {
     fn mount<F>(&mut self, parent_id: ContainerID, initializer: F) -> ContainerID
     where
-        F: FnOnce() -> OpaqueContainer + Send + 'static,
+        F: FnOnce(&mut OpaqueContainer, &mut Environment) -> OpaqueContainer + Send + 'static,
     {
         let id = self.compositor.next_id();
         self.commands
@@ -141,7 +144,7 @@ impl polyhorn_core::CommandBuffer<Platform> for CommandBuffer {
 
     fn mutate<F>(&mut self, ids: &[ContainerID], mutator: F)
     where
-        F: FnOnce(&mut [&mut OpaqueContainer]) + Send + 'static,
+        F: FnOnce(&mut [&mut OpaqueContainer], &mut Environment) + Send + 'static,
     {
         self.commands
             .push(Command::Mutate(ids.to_owned(), Box::new(mutator)));
@@ -158,8 +161,9 @@ impl polyhorn_core::CommandBuffer<Platform> for CommandBuffer {
 
         self.compositor.buffer.with(move |state| {
             // Apply each command to this state.
+            let mut environment = Environment::new(layouter.clone());
             for command in commands {
-                state.process(command);
+                state.process(&mut environment, command);
             }
 
             let mut layouter = layouter.write().unwrap();

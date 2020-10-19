@@ -2,8 +2,7 @@ use as_any::AsAny;
 use polyhorn_ios_sys::polykit::{PLYView, PLYViewController, PLYWindow};
 use polyhorn_ios_sys::uikit::UIApplication;
 
-use super::Layout;
-use super::Platform;
+use super::{Environment, Layout, Platform};
 
 /// Concrete implementation of a iOS-specific container.
 pub trait Container: AsAny + 'static {
@@ -82,7 +81,7 @@ impl OpaqueContainer {
 }
 
 impl polyhorn_core::Container<Platform> for OpaqueContainer {
-    fn mount(&mut self, container: &mut OpaqueContainer) {
+    fn mount(&mut self, container: &mut OpaqueContainer, _environment: &mut Environment) {
         if let (Some(child), Some(content)) = (container.layout(), container.content_layout()) {
             let mut layouter = child.layouter().write().unwrap();
             layouter.add_child(child.node(), content.node());

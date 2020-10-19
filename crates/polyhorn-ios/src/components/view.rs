@@ -101,7 +101,7 @@ impl Component for View {
                 None => return,
             };
 
-            buffer.mutate(&[id], move |containers| {
+            buffer.mutate(&[id], move |containers, _| {
                 let container = &mut containers[0];
 
                 let layout = match container.layout() {
