@@ -21,8 +21,8 @@ impl polyhorn_core::Builtin<Platform> for Builtin {
         environment: &mut Environment,
     ) -> OpaqueContainer {
         let layout = match self {
-            Builtin::Label => LayoutNode::leaf(environment.layouter().clone()),
-            _ => LayoutNode::new(environment.layouter().clone()),
+            Builtin::Label => LayoutNode::leaf(environment.layout_tree().clone()),
+            _ => LayoutNode::new(environment.layout_tree().clone()),
         };
 
         let view = View::new(environment.env(), environment.activity());

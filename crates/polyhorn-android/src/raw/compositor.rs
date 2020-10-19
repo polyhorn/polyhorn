@@ -84,14 +84,14 @@ impl polyhorn_core::CommandBuffer<Platform> for CommandBuffer {
         let commands = std::mem::take(&mut self.commands);
 
         let activity = self.compositor.environment.activity().clone();
-        let layouter = self.compositor.environment.layouter().clone();
+        let layout_tree = self.compositor.environment.layout_tree().clone();
         let state = self.compositor.buffer.clone();
 
         Runnable::new(&self.compositor.environment.env(), move |env| {
             let mut environment = Environment::new(
                 activity,
                 unsafe { env.clone().prolong_lifetime() },
-                layouter.clone(),
+                layout_tree.clone(),
             );
 
             let mut state = state.lock().unwrap();
@@ -101,8 +101,8 @@ impl polyhorn_core::CommandBuffer<Platform> for CommandBuffer {
                 state.process(&mut environment, command);
             }
 
-            let mut layouter = layouter.write().unwrap();
-            layouter.recompute_roots();
+            let mut layout_tree = layout_tree.write().unwrap();
+            layout_tree.recompute_roots();
         })
         .queue(&self.compositor.environment.env());
     }

@@ -58,8 +58,8 @@ impl polyhorn_core::Builtin<Platform> for Builtin {
         environment: &mut Environment,
     ) -> OpaqueContainer {
         let layout = match self {
-            Builtin::Label => LayoutNode::leaf(environment.layouter().clone()),
-            _ => LayoutNode::new(environment.layouter().clone()),
+            Builtin::Label => LayoutNode::leaf(environment.layout_tree().clone()),
+            _ => LayoutNode::new(environment.layout_tree().clone()),
         };
 
         match self {
@@ -71,7 +71,7 @@ impl polyhorn_core::Builtin<Platform> for Builtin {
             Builtin::Modal => OpaqueContainer::new(layout, None, PLYViewController::new()),
             Builtin::ScrollView => OpaqueContainer::new(
                 layout,
-                Some(LayoutNode::new(environment.layouter().clone())),
+                Some(LayoutNode::new(environment.layout_tree().clone())),
                 PLYScrollView::new(),
             ),
             Builtin::TextInput => OpaqueContainer::new(layout, None, PLYTextInputView::new()),
