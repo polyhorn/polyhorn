@@ -1,5 +1,4 @@
 mod builtin;
-mod bus;
 mod component;
 mod compositor;
 mod container;
@@ -8,7 +7,6 @@ mod logger;
 mod platform;
 
 pub use builtin::Builtin;
-pub use bus::Bus;
 pub use component::{Component, OpaqueComponent};
 pub use compositor::{CommandBuffer, Compositor, ContainerID};
 pub use container::{Container, OpaqueContainer};

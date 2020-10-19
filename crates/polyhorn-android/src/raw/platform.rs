@@ -1,8 +1,9 @@
 use polyhorn_android_sys::{Activity, Object, Thread};
+use polyhorn_core::EventLoop;
 use polyhorn_ui::layout::LayoutTree;
 
 use super::{
-    AndroidLogger, Bus, CommandBuffer, Compositor, ContainerID, Environment, OpaqueComponent,
+    AndroidLogger, CommandBuffer, Compositor, ContainerID, Environment, OpaqueComponent,
     OpaqueContainer,
 };
 
@@ -10,7 +11,6 @@ use super::{
 pub enum Platform {}
 
 impl polyhorn_core::Platform for Platform {
-    type Bus = Bus;
     type CommandBuffer = CommandBuffer;
     type Component = OpaqueComponent;
     type Compositor = Compositor;
@@ -20,7 +20,7 @@ impl polyhorn_core::Platform for Platform {
 
     fn with_compositor<F>(mut container: Self::Container, task: F) -> polyhorn_core::Disposable
     where
-        F: FnOnce(Self::ContainerID, Self::Compositor, Self::Bus) -> polyhorn_core::Disposable
+        F: FnOnce(Self::ContainerID, Self::Compositor, EventLoop) -> polyhorn_core::Disposable
             + Send
             + 'static,
     {
@@ -46,9 +46,9 @@ impl polyhorn_core::Platform for Platform {
 
             let mut runtime = tokio::runtime::Runtime::new().unwrap();
             runtime.block_on(async move {
-                let (bus, handler) = Bus::new();
+                let (evloop, handler) = EventLoop::new();
                 let _compositor = compositor.clone();
-                let _result = task(id, compositor, bus);
+                let _result = task(id, compositor, evloop);
 
                 handler.main().await;
             })

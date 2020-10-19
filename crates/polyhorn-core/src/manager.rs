@@ -1,6 +1,6 @@
 use super::hooks::{UseAsync, UseContext, UseEffect, UseReference, UseState};
 use super::{
-    Bus, Context, ContextTree, EffectLink, Element, Instance, Key, Link, Memory, Platform,
+    Context, ContextTree, EffectLink, Element, EventLoop, Instance, Key, Link, Memory, Platform,
     Reference, State, Weak, WeakLink,
 };
 use serde::{Deserialize, Serialize};
@@ -12,7 +12,7 @@ where
     P: Platform + ?Sized,
 {
     compositor: &'a P::Compositor,
-    bus: &'a P::Bus,
+    bus: &'a EventLoop,
     memory: &'a mut Memory,
     context: &'a ContextTree,
     children: Element<P>,
@@ -26,7 +26,7 @@ where
 {
     pub fn new(
         compositor: &'a P::Compositor,
-        bus: &'a P::Bus,
+        bus: &'a EventLoop,
         memory: &'a mut Memory,
         context: &'a ContextTree,
         children: Element<P>,

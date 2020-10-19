@@ -1,11 +1,9 @@
 use std::hash::Hash;
 
-use super::{Bus, CommandBuffer, Component, Compositor, Container, Disposable};
+use super::{CommandBuffer, Component, Compositor, Container, Disposable, EventLoop};
 
 /// This is a platform that needs to be implemented by every render host.
 pub trait Platform: 'static {
-    type Bus: Bus;
-
     /// This is a virtual container that renders a built-in. These containers
     /// should be thread-safe (e.g. `Send + Sync`).
     type ContainerID: Copy + Eq + Hash + Send;
@@ -25,5 +23,5 @@ pub trait Platform: 'static {
 
     fn with_compositor<F>(container: Self::Container, task: F) -> Disposable
     where
-        F: FnOnce(Self::ContainerID, Self::Compositor, Self::Bus) -> Disposable + Send + 'static;
+        F: FnOnce(Self::ContainerID, Self::Compositor, EventLoop) -> Disposable + Send + 'static;
 }

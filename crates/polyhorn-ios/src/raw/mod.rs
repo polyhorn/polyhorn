@@ -3,7 +3,6 @@
 mod animator;
 mod apply;
 mod builtin;
-mod bus;
 mod component;
 mod compositor;
 mod container;
@@ -16,7 +15,6 @@ mod queue;
 pub use animator::{AnimationHandle, Animator};
 pub use apply::Apply;
 pub use builtin::Builtin;
-pub use bus::Bus;
 pub use component::{Component, OpaqueComponent};
 pub use compositor::{CommandBuffer, Compositor, ContainerID};
 pub use container::{Container, OpaqueContainer};

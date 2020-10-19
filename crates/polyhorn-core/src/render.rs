@@ -1,7 +1,7 @@
 use super::element::{ElementBuiltin, ElementComponent, ElementContext, ElementFragment};
 use super::{
-    Bus, CommandBuffer, Component, Compositor, Disposable, EffectLink, Element, Instance, Manager,
-    Platform,
+    CommandBuffer, Component, Compositor, Disposable, EffectLink, Element, EventLoop, Instance,
+    Manager, Platform,
 };
 use std::cell::RefCell;
 use std::ops::DerefMut;
@@ -189,7 +189,7 @@ where
     P: Platform + ?Sized,
 {
     compositor: RefCell<P::Compositor>,
-    bus: RefCell<P::Bus>,
+    bus: RefCell<EventLoop>,
 }
 
 impl<P> Renderer<P>
@@ -198,7 +198,7 @@ where
 {
     /// This function returns a new reference counted renderer with the given
     /// compositor.
-    pub fn new(compositor: P::Compositor, bus: P::Bus) -> Rc<Renderer<P>> {
+    pub fn new(compositor: P::Compositor, bus: EventLoop) -> Rc<Renderer<P>> {
         Rc::new(Renderer {
             compositor: RefCell::new(compositor),
             bus: RefCell::new(bus),
