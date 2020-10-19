@@ -13,16 +13,16 @@ use super::{Environment, OpaqueContainer, Platform, QueueBound};
 pub struct Compositor {
     buffer: Arc<QueueBound<Composition<Platform>>>,
     counter: Arc<AtomicUsize>,
-    layouter: Arc<RwLock<LayoutTree>>,
+    layout_tree: Arc<RwLock<LayoutTree>>,
 }
 
 impl Compositor {
-    /// Returns a new compositor with the given shared layouter.
-    pub fn new(layouter: Arc<RwLock<LayoutTree>>) -> Compositor {
+    /// Returns a new compositor with the given shared layout tree.
+    pub fn new(layout_tree: Arc<RwLock<LayoutTree>>) -> Compositor {
         Compositor {
             buffer: Arc::new(QueueBound::new(Queue::main(), || Default::default())),
             counter: Arc::new(AtomicUsize::default()),
-            layouter,
+            layout_tree,
         }
     }
 
@@ -87,20 +87,24 @@ impl polyhorn_core::CommandBuffer<Platform> for CommandBuffer {
         self.commands.push(Command::Unmount(id));
     }
 
+    fn layout(&mut self) {
+        self.mutate(&[], |_, environment| {
+            let mut layout_tree = environment.layout_tree().write().unwrap();
+            layout_tree.recompute_roots();
+        });
+    }
+
     fn commit(mut self) {
         let commands = std::mem::take(&mut self.commands);
 
-        let layouter = self.compositor.layouter.clone();
+        let layout_tree = self.compositor.layout_tree.clone();
 
         self.compositor.buffer.with(move |state| {
             // Apply each command to this state.
-            let mut environment = Environment::new(layouter.clone());
+            let mut environment = Environment::new(layout_tree.clone());
             for command in commands {
                 state.process(&mut environment, command);
             }
-
-            let mut layouter = layouter.write().unwrap();
-            layouter.recompute_roots();
         });
     }
 }

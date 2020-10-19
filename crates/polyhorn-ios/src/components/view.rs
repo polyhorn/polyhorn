@@ -109,8 +109,6 @@ impl Component for View {
                     None => return,
                 };
 
-                layout.set_style(style);
-
                 if let Some(view) = container.downcast_mut::<PLYView>() {
                     style.apply(view);
 
@@ -162,7 +160,7 @@ impl Component for View {
 
         Element::builtin(
             Key::new(()),
-            Builtin::View,
+            Builtin::View(self.style),
             manager.children(),
             Some(view_ref.weak(manager)),
         )

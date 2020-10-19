@@ -37,6 +37,13 @@ where
     }
 
     fn rerender_builtin(&mut self, instance: &Rc<Instance<P>>, element: ElementBuiltin<P>) {
+        let container = instance.container();
+        let builtin = element.builtin;
+
+        self.buffer.mutate(&[container], move |containers, _| {
+            builtin.update(containers[0]);
+        });
+
         self.rerender_edges(instance, vec![*element.children]);
     }
 
@@ -187,6 +194,8 @@ where
     }
 
     pub fn finish(mut self) {
+        self.buffer.layout();
+
         // Finally, we apply the effects and we're done!
         for effect in self.layout_effects.into_iter() {
             let instance = effect.instance().clone();

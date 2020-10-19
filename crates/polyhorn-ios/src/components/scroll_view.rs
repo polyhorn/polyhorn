@@ -30,6 +30,20 @@ impl Component for Scrollable {
 
         let style = self.style;
 
+        let content_style = ViewStyle {
+            flex_direction: FlexDirection::Column,
+            position: Position::Absolute(Default::default()),
+            min_size: Size {
+                width: Dimension::Percentage(1.0),
+                height: Dimension::Percentage(1.0),
+            },
+            max_size: Size {
+                width: Dimension::Percentage(1.0),
+                height: Dimension::Undefined,
+            },
+            ..Default::default()
+        };
+
         use_layout_effect!(manager, move |link, buffer| {
             let id = match view_ref.apply(link, |view| view.to_owned()) {
                 Some(id) => id,
@@ -48,22 +62,6 @@ impl Component for Scrollable {
                     Some(layout) => layout.clone(),
                     None => return,
                 };
-
-                content_layout.set_style(ViewStyle {
-                    flex_direction: FlexDirection::Column,
-                    position: Position::Absolute(Default::default()),
-                    min_size: Size {
-                        width: Dimension::Percentage(1.0),
-                        height: Dimension::Percentage(1.0),
-                    },
-                    max_size: Size {
-                        width: Dimension::Percentage(1.0),
-                        height: Dimension::Undefined,
-                    },
-                    ..Default::default()
-                });
-
-                layout.set_style(style.view);
 
                 if let Some(mut view) = container.container().to_view() {
                     style.view.apply(&mut view);
@@ -99,7 +97,10 @@ impl Component for Scrollable {
 
         Element::builtin(
             Key::new(()),
-            Builtin::ScrollView,
+            Builtin::ScrollView {
+                self_style: self.style.view,
+                content_style,
+            },
             manager.children(),
             Some(view_ref.weak(manager)),
         )

@@ -7,9 +7,16 @@ use crate::styles::ViewStyle;
 
 /// Measure function that is called to obtain the intrinsic content size of a
 /// leaf node (e.g. images or text).
+#[derive(Clone)]
 pub enum MeasureFunc {
     /// Measure function backed by a boxed closure.
-    Boxed(Box<dyn Fn(Size<Dimension<f32>>) -> Size<f32>>),
+    Boxed(Arc<dyn Fn(Size<Dimension<f32>>) -> Size<f32> + Send + Sync>),
+}
+
+impl std::fmt::Debug for MeasureFunc {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_tuple("MeasureFunc").finish()
+    }
 }
 
 /// Computed layout of a node.
@@ -119,7 +126,7 @@ impl LayoutNode {
     pub fn leaf(layouter: Arc<RwLock<LayoutTree>>) -> LayoutNode {
         let node = layouter.write().unwrap().flexbox_mut().new_leaf(
             Default::default(),
-            MeasureFunc::Boxed(Box::new(|_| Size {
+            MeasureFunc::Boxed(Arc::new(|_| Size {
                 width: 0.0,
                 height: 0.0,
             })),
@@ -136,6 +143,16 @@ impl LayoutNode {
     /// Returns the ID of this node.
     pub fn node(&self) -> Node {
         self.node
+    }
+
+    /// Updates the measure function of this node without recomputing its layout
+    /// or any of its ancestors' layouts.
+    pub fn set_measure(&self, measure: MeasureFunc) {
+        self.layouter
+            .write()
+            .unwrap()
+            .flexbox_mut()
+            .set_measure(self.node, measure);
     }
 
     /// Updates the style of this node without recomputing its layout or any of

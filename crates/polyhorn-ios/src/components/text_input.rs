@@ -1,8 +1,7 @@
 use polyhorn_core::CommandBuffer;
 use polyhorn_ios_sys::coregraphics::CGRect;
 use polyhorn_ios_sys::polykit::{PLYTextInputView, PLYView};
-use polyhorn_ui::geometry::{Dimension, Size};
-use polyhorn_ui::styles::{TextStyle, ViewStyle};
+use polyhorn_ui::styles::TextStyle;
 
 use crate::prelude::*;
 use crate::raw::{attributed_string, Builtin, Container, ContainerID, OpaqueContainer};
@@ -54,14 +53,6 @@ impl Component for TextInput {
                     Some(layout) => layout.clone(),
                     None => return,
                 };
-
-                layout.set_style(ViewStyle {
-                    size: Size {
-                        width: Dimension::Percentage(1.0),
-                        height: Dimension::Auto,
-                    },
-                    ..Default::default()
-                });
 
                 assert!(container.downcast_mut::<PLYTextInputView>().is_some());
 

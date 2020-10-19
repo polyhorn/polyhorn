@@ -80,6 +80,10 @@ impl polyhorn_core::CommandBuffer<Platform> for CommandBuffer {
         self.commands.push(Command::Unmount(id));
     }
 
+    fn layout(&mut self) {
+        // No-op on Android, currently.
+    }
+
     fn commit(mut self) {
         let commands = std::mem::take(&mut self.commands);
 

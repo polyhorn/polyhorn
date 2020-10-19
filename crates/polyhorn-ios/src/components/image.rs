@@ -38,29 +38,29 @@ impl Component for Image {
         let image_source = self.source.clone();
         let tint_color = self.style.image.tint_color.clone();
 
+        let image = match image_source {
+            ImageSource::Asset(asset) => {
+                let path = asset.package().to_owned() + "/" + asset.name();
+                let image = UIImage::with_name(&path).unwrap();
+                let size = Size::new(image.size().width as f32, image.size().height as f32);
+
+                ConcreteImage {
+                    image: Some(image),
+                    size,
+                }
+            }
+            ImageSource::Placeholder(size) => ConcreteImage { image: None, size },
+            _ => unimplemented!("Image sources backed by buffers are not yet implemented."),
+        };
+
+        let width = Dimension::Points(image.size.width);
+        let height = Dimension::Points(image.size.height);
+
         use_layout_effect!(manager, move |link, buffer| {
             let id = match view_ref.apply(link, |id| id.to_owned()) {
                 Some(id) => id,
                 None => return,
             };
-
-            let image = match image_source {
-                ImageSource::Asset(asset) => {
-                    let path = asset.package().to_owned() + "/" + asset.name();
-                    let image = UIImage::with_name(&path).unwrap();
-                    let size = Size::new(image.size().width as f32, image.size().height as f32);
-
-                    ConcreteImage {
-                        image: Some(image),
-                        size,
-                    }
-                }
-                ImageSource::Placeholder(size) => ConcreteImage { image: None, size },
-                _ => unimplemented!("Image sources backed by buffers are not yet implemented."),
-            };
-
-            let width = Dimension::Points(image.size.width);
-            let height = Dimension::Points(image.size.height);
 
             buffer.mutate(&[id], move |containers, _| {
                 let container = &mut containers[0];
@@ -69,11 +69,6 @@ impl Component for Image {
                     Some(layout) => layout.clone(),
                     None => return,
                 };
-
-                layout.set_style(ViewStyle {
-                    size: Size { width, height },
-                    ..Default::default()
-                });
 
                 if let Some(view) = container.downcast_mut::<PLYImageView>() {
                     if let Some(image) = image.image.as_ref() {
@@ -100,7 +95,10 @@ impl Component for Image {
 
         Element::builtin(
             Key::new(()),
-            Builtin::ImageView,
+            Builtin::ImageView(ViewStyle {
+                size: Size { width, height },
+                ..Default::default()
+            }),
             manager.children(),
             Some(view_ref.weak(manager)),
         )

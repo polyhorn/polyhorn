@@ -3,8 +3,9 @@ use polyhorn_ios_sys::coregraphics::{CGRect, CGSize};
 use polyhorn_ios_sys::foundation::{NSAttributedString, NSMutableAttributedString};
 use polyhorn_ios_sys::polykit::{PLYLabel, PLYView};
 use polyhorn_ui::geometry::{Dimension, Size};
-use polyhorn_ui::layout::{Algorithm, MeasureFunc};
+use polyhorn_ui::layout::MeasureFunc;
 use polyhorn_ui::styles::TextStyle;
+use std::sync::Arc;
 
 use crate::prelude::*;
 use crate::raw::{attributed_string, Builtin, Container, OpaqueContainer};
@@ -59,7 +60,7 @@ fn collect_texts(style: &TextStyle, children: &Element) -> Vec<TextSegment> {
     segments
 }
 
-fn transform_texts(texts: Vec<TextSegment>) -> NSAttributedString {
+fn transform_texts(texts: &[TextSegment]) -> NSAttributedString {
     let mut string = NSMutableAttributedString::new();
 
     for text in texts {
@@ -74,6 +75,7 @@ impl Component for Text {
         let label_ref = use_reference!(manager, None);
 
         let texts = collect_texts(&self.style, &manager.children());
+        let attributed_string = transform_texts(&texts);
 
         use_layout_effect!(manager, move |link, buffer| {
             let id = match label_ref.apply(link, |label| label.to_owned()) {
@@ -84,49 +86,14 @@ impl Component for Text {
             buffer.mutate(&[id], move |containers, _| {
                 let container = &mut containers[0];
 
-                let attributed_string = transform_texts(texts);
-
                 let layout = match container.layout() {
                     Some(layout) => layout.clone(),
                     None => return,
                 };
 
-                {
-                    let attributed_string = attributed_string.clone();
-
-                    layout
-                        .layouter()
-                        .write()
-                        .unwrap()
-                        .flexbox_mut()
-                        .set_measure(
-                            layout.node(),
-                            MeasureFunc::Boxed(Box::new(move |size| {
-                                let min_size = CGSize {
-                                    width: match size.width {
-                                        Dimension::Points(width) => width as _,
-                                        _ => 0.0,
-                                    },
-                                    height: match size.height {
-                                        Dimension::Points(height) => height as _,
-                                        _ => 0.0,
-                                    },
-                                };
-
-                                let target =
-                                    attributed_string.bounding_rect_with_size(min_size).size;
-
-                                let result = Size {
-                                    width: target.width.ceil() as _,
-                                    height: target.height.ceil() as _,
-                                };
-
-                                result
-                            })),
-                        );
-                }
-
                 if let Some(view) = container.downcast_mut::<PLYLabel>() {
+                    let attributed_string = transform_texts(&texts);
+
                     view.set_attributed_text(&attributed_string);
 
                     view.to_view().set_layout(move || {
@@ -145,7 +112,27 @@ impl Component for Text {
 
         Element::builtin(
             Key::new(()),
-            Builtin::Label,
+            Builtin::Label(MeasureFunc::Boxed(Arc::new(move |size| {
+                let min_size = CGSize {
+                    width: match size.width {
+                        Dimension::Points(width) => width as _,
+                        _ => 0.0,
+                    },
+                    height: match size.height {
+                        Dimension::Points(height) => height as _,
+                        _ => 0.0,
+                    },
+                };
+
+                let target = attributed_string.bounding_rect_with_size(min_size).size;
+
+                let result = Size {
+                    width: target.width.ceil() as _,
+                    height: target.height.ceil() as _,
+                };
+
+                result
+            }))),
             Element::fragment(Key::new(()), vec![]),
             Some(label_ref.weak(manager)),
         )

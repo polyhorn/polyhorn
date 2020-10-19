@@ -46,6 +46,8 @@ where
 
     fn unmount(&mut self, id: P::ContainerID);
 
+    fn layout(&mut self);
+
     fn commit(self);
 }
 

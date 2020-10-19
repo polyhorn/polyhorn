@@ -161,6 +161,9 @@ impl NSAttributedString {
     }
 }
 
+unsafe impl Send for NSAttributedString {}
+unsafe impl Sync for NSAttributedString {}
+
 impl Raw for NSAttributedString {
     unsafe fn from_raw(object: *mut Object) -> Self {
         NSAttributedString { object }

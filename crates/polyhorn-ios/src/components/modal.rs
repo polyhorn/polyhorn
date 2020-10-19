@@ -1,8 +1,6 @@
 use polyhorn_channel::{use_channel, Sender};
 use polyhorn_core::CommandBuffer;
 use polyhorn_ios_sys::polykit::{PLYCallback, PLYViewController};
-use polyhorn_ui::geometry::{Dimension, Size};
-use polyhorn_ui::styles::{FlexDirection, Position, ViewStyle};
 use std::rc::Rc;
 
 use crate::hooks::SafeAreaInsets;
@@ -82,20 +80,6 @@ impl Component for Modal {
             buffer.mutate(&[id], move |containers, _| {
                 let container = &mut containers[0];
 
-                let frame = match container.downcast_mut::<PLYViewController>() {
-                    Some(view_controller) => {
-                        let view = view_controller.view_mut();
-                        view.set_needs_layout();
-                        view.frame()
-                    }
-                    None => return,
-                };
-
-                let mut layout = match container.layout() {
-                    Some(layout) => layout.clone(),
-                    None => return,
-                };
-
                 if !visible {
                     container
                         .container()
@@ -125,18 +109,6 @@ impl Component for Modal {
                     insets.bottom as _,
                     insets.left as _,
                 ));
-
-                layout.set_style(ViewStyle {
-                    position: Position::Absolute(Default::default()),
-                    flex_direction: FlexDirection::Column,
-                    size: Size {
-                        width: Dimension::Points(frame.size.width as _),
-                        height: Dimension::Points(frame.size.height as _),
-                    },
-                    ..Default::default()
-                });
-
-                layout.compute(Some((frame.size.width as _, frame.size.height as _)));
             });
         });
 

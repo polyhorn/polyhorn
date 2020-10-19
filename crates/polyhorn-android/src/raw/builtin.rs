@@ -28,6 +28,8 @@ impl polyhorn_core::Builtin<Platform> for Builtin {
         let view = View::new(environment.env(), environment.activity());
         return OpaqueContainer::new(layout, None, view);
     }
+
+    fn update(&self, _container: &mut OpaqueContainer) {}
 }
 
 impl Container for polyhorn_android_sys::Activity {
