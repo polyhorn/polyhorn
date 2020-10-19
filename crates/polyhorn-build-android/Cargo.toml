@@ -11,4 +11,3 @@ repository = "https://github.com/polyhorn/polyhorn/tree/crates/polyhorn-build-an
 
 [dependencies]
 walkdir = "2.3.1"
-dirs = "3.0.1"

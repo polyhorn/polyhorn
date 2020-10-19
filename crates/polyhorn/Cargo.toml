@@ -23,5 +23,8 @@ polyhorn-macros = { path = "../polyhorn-macros", version = "0.2.0" }
 [target.'cfg(target_os = "ios")'.dependencies]
 polyhorn-ios = { path = "../polyhorn-ios", version = "0.2.0" }
 
+[target.'cfg(target_os = "android")'.dependencies]
+polyhorn-android = { path = "../polyhorn-android", version = "0.2.0" }
+
 [features]
 binary = ["polyhorn-cli"]

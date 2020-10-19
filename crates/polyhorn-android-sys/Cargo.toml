@@ -1,0 +1,18 @@
+[package]
+name = "polyhorn-android-sys"
+version = "0.2.0"
+authors = ["Tim <tim@glacyr.com>"]
+edition = "2018"
+license = "MIT"
+description = "Low-level Android bindings for Polyhorn."
+repository = "https://github.com/polyhorn/polyhorn/tree/crates/polyhorn-android-sys"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+jni = "0.17.0"
+libc = "0.2.79"
+log = "0.4.11"
+
+[build-dependencies]
+polyhorn-build = { path = "../polyhorn-build", version = "0.2.0" }

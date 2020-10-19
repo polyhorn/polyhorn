@@ -1,0 +1,3 @@
+fn main() {
+    polyhorn_build::build();
+}
