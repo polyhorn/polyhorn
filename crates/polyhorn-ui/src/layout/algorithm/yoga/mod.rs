@@ -1,19 +1,20 @@
-use polyhorn_ui::geometry::{Dimension, Point, Size};
-use polyhorn_ui::layout::LayoutAxisX;
-use polyhorn_ui::styles::{Position, ViewStyle};
 use std::cell::RefCell;
 use std::collections::HashMap;
+use std::sync::Mutex;
 
 use super::Algorithm;
-use crate::{Layout, MeasureFunc};
+use crate::geometry::{Dimension, Point, Size};
+use crate::layout::{Layout, LayoutAxisX, MeasureFunc};
+use crate::styles::{Position, ViewStyle};
 
 mod convert;
 
 use convert::IntoYoga;
 
+/// Concrete flexbox implementation powered by Yoga.
 pub struct Flexbox {
     counter: usize,
-    nodes: HashMap<usize, RefCell<yoga::Node>>,
+    nodes: Mutex<HashMap<usize, RefCell<yoga::Node>>>,
 }
 
 impl Flexbox {
@@ -24,6 +25,7 @@ impl Flexbox {
     }
 }
 
+/// Index into the flexbox's node arena.
 #[derive(Copy, Clone, Debug, Default, Eq, PartialEq, Hash)]
 pub struct Node(usize);
 
@@ -39,16 +41,17 @@ impl Algorithm for Flexbox {
 
     fn new_node(&mut self, style: ViewStyle, children: &[Self::Node]) -> Self::Node {
         let id = self.next_id();
+
+        let mut nodes = self.nodes.lock().unwrap();
         let mut node = yoga::Node::new();
 
         for (i, child) in children.iter().enumerate() {
-            node.insert_child(
-                &mut self.nodes.get(&child.0).unwrap().borrow_mut(),
-                i as u32,
-            );
+            node.insert_child(&mut nodes.get(&child.0).unwrap().borrow_mut(), i as u32);
         }
 
-        self.nodes.insert(id, RefCell::new(node));
+        nodes.insert(id, RefCell::new(node));
+
+        std::mem::drop(nodes);
 
         let node = Node(id);
 
@@ -61,7 +64,7 @@ impl Algorithm for Flexbox {
         let id = self.next_id();
         let node = yoga::Node::new();
 
-        self.nodes.insert(id, RefCell::new(node));
+        self.nodes.lock().unwrap().insert(id, RefCell::new(node));
 
         let node = Node(id);
 
@@ -72,28 +75,37 @@ impl Algorithm for Flexbox {
     }
 
     fn add_child(&mut self, parent: Self::Node, child: Self::Node) {
-        let mut parent = self.nodes.get(&parent.0).unwrap().borrow_mut();
-        let mut child = self.nodes.get(&child.0).unwrap().borrow_mut();
+        let nodes = self.nodes.lock().unwrap();
+        let mut parent = nodes.get(&parent.0).unwrap().borrow_mut();
+        let mut child = nodes.get(&child.0).unwrap().borrow_mut();
         let child_count = parent.child_count();
         parent.insert_child(&mut child, child_count);
     }
 
     fn remove_child(&mut self, parent: Self::Node, child: Self::Node) {
-        let mut parent = self.nodes.get(&parent.0).unwrap().borrow_mut();
-        let mut child = self.nodes.get(&child.0).unwrap().borrow_mut();
+        let nodes = self.nodes.lock().unwrap();
+        let mut parent = nodes.get(&parent.0).unwrap().borrow_mut();
+        let mut child = nodes.get(&child.0).unwrap().borrow_mut();
         parent.remove_child(&mut child);
     }
 
     fn child_count(&self, parent: Self::Node) -> usize {
-        self.nodes.get(&parent.0).unwrap().borrow().child_count() as usize
+        self.nodes
+            .lock()
+            .unwrap()
+            .get(&parent.0)
+            .unwrap()
+            .borrow()
+            .child_count() as usize
     }
 
     fn remove(&mut self, node: Self::Node) {
-        let _ = self.nodes.remove(&node.0);
+        let _ = self.nodes.lock().unwrap().remove(&node.0);
     }
 
     fn set_style(&mut self, node: Self::Node, style: ViewStyle) {
-        let mut node = self.nodes.get(&node.0).unwrap().borrow_mut();
+        let nodes = self.nodes.lock().unwrap();
+        let mut node = nodes.get(&node.0).unwrap().borrow_mut();
 
         match style.position {
             Position::Absolute(absolute) => {
@@ -171,7 +183,8 @@ impl Algorithm for Flexbox {
     }
 
     fn set_measure(&mut self, node: Self::Node, measure: MeasureFunc) {
-        let mut node = self.nodes.get(&node.0).unwrap().borrow_mut();
+        let nodes = self.nodes.lock().unwrap();
+        let mut node = nodes.get(&node.0).unwrap().borrow_mut();
 
         node.set_context(Some(yoga::Context::new(measure)));
 
@@ -206,7 +219,8 @@ impl Algorithm for Flexbox {
     }
 
     fn compute_layout(&mut self, node: Self::Node, size: Size<Dimension<f32>>) {
-        let mut node = self.nodes.get(&node.0).unwrap().borrow_mut();
+        let nodes = self.nodes.lock().unwrap();
+        let mut node = nodes.get(&node.0).unwrap().borrow_mut();
 
         node.calculate_layout(
             match size.width {
@@ -222,7 +236,8 @@ impl Algorithm for Flexbox {
     }
 
     fn layout(&self, node: Self::Node) -> Layout {
-        let node = self.nodes.get(&node.0).unwrap().borrow();
+        let nodes = self.nodes.lock().unwrap();
+        let node = nodes.get(&node.0).unwrap().borrow();
 
         Layout {
             origin: Point {
@@ -236,3 +251,8 @@ impl Algorithm for Flexbox {
         }
     }
 }
+
+/// Send and sync are not implemented for `yoga::Node` but they can be sent
+/// between threads and they are synced by the mutex of Flexbox.
+unsafe impl Send for Flexbox {}
+unsafe impl Sync for Flexbox {}

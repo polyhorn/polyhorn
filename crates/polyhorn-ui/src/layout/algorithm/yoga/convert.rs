@@ -1,5 +1,5 @@
-use polyhorn_ui::geometry::Dimension;
-use polyhorn_ui::styles::{Align, FlexDirection, Justify, Overflow};
+use crate::geometry::Dimension;
+use crate::styles::{Align, FlexDirection, Justify, Overflow};
 
 pub trait IntoYoga<T> {
     fn into_yoga(self) -> T;

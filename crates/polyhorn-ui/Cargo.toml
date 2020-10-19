@@ -21,10 +21,17 @@ quote = "1.0.7"
 strum = "0.19.2"
 strum_macros = "0.19.2"
 
+stretch = { version = "0.3.2", optional = true }
+yoga = { package = "polyhorn-yoga", version = "0.3.2", optional = true }
 usvg = { version = "0.11.0", default-features = false, optional = true }
 
 casco = { version = "0.2.0", path = "../casco" }
 polyhorn-core = { version = "0.2.0", path = "../polyhorn-core" }
 
 [features]
+default = ["layout-yoga"]
+
 macros = ["usvg"]
+
+layout-yoga = ["yoga"]
+layout-stretch = ["stretch"]

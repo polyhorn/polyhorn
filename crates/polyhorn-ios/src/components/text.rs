@@ -2,8 +2,8 @@ use polyhorn_core::CommandBuffer;
 use polyhorn_ios_sys::coregraphics::{CGRect, CGSize};
 use polyhorn_ios_sys::foundation::{NSAttributedString, NSMutableAttributedString};
 use polyhorn_ios_sys::polykit::{PLYLabel, PLYView};
-use polyhorn_layout::{self as layout, Algorithm};
 use polyhorn_ui::geometry::{Dimension, Size};
+use polyhorn_ui::layout::{Algorithm, MeasureFunc};
 use polyhorn_ui::styles::TextStyle;
 
 use crate::prelude::*;
@@ -101,7 +101,7 @@ impl Component for Text {
                         .flexbox_mut()
                         .set_measure(
                             layout.node(),
-                            layout::MeasureFunc::Boxed(Box::new(move |size| {
+                            MeasureFunc::Boxed(Box::new(move |size| {
                                 let min_size = CGSize {
                                     width: match size.width {
                                         Dimension::Points(width) => width as _,

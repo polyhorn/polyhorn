@@ -6,6 +6,13 @@ use strum_macros::EnumString;
 
 use crate::geometry::Size;
 
+/// Implementations of the flexbox algorithm.
+pub mod algorithm;
+mod tree;
+
+pub use algorithm::Algorithm;
+pub use tree::{Layout, LayoutNode, LayoutTree, MeasureFunc};
+
 /// Opaque coordinate within a reference system.
 #[derive(Copy, Clone, Debug, Default, Eq, PartialEq)]
 pub struct LayoutAnchor<T>

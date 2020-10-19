@@ -1,7 +1,8 @@
 use as_any::AsAny;
 use polyhorn_android_sys::{Activity, View};
+use polyhorn_ui::layout::LayoutNode;
 
-use super::{Environment, Layout, Platform};
+use super::{Environment, Platform};
 
 /// Concrete implementation of an Android-specific container.
 pub trait Container: AsAny + Send {
@@ -21,12 +22,16 @@ pub trait Container: AsAny + Send {
 /// the second refers to the container's content layout. These can be different
 /// when working with scroll views for example, which are essentially treated
 /// as two adjacent nodes in the layout tree.
-pub struct OpaqueContainer(Option<Layout>, Option<Layout>, Box<dyn Container>);
+pub struct OpaqueContainer(Option<LayoutNode>, Option<LayoutNode>, Box<dyn Container>);
 
 impl OpaqueContainer {
     /// Returns a new opaque container with the given layout, view and
     /// optionally a separate content layout.
-    pub fn new<T>(layout: Layout, content_layout: Option<Layout>, view: T) -> OpaqueContainer
+    pub fn new<T>(
+        layout: LayoutNode,
+        content_layout: Option<LayoutNode>,
+        view: T,
+    ) -> OpaqueContainer
     where
         T: Container,
     {
@@ -45,13 +50,13 @@ impl OpaqueContainer {
     }
 
     /// Returns the layout of this container (if applicable).
-    pub fn layout(&self) -> Option<&Layout> {
+    pub fn layout(&self) -> Option<&LayoutNode> {
         self.0.as_ref()
     }
 
     /// Returns the content layout of this container (if applicable). Returns
     /// `None` if not applicable, even if the container has a regular layout.
-    pub fn content_layout(&self) -> Option<&Layout> {
+    pub fn content_layout(&self) -> Option<&LayoutNode> {
         self.1.as_ref()
     }
 

@@ -1,9 +1,10 @@
-use super::{
-    AndroidLogger, Bus, CommandBuffer, Compositor, ContainerID, Environment, Layouter,
-    OpaqueComponent, OpaqueContainer,
-};
-
 use polyhorn_android_sys::{Activity, Object, Thread};
+use polyhorn_ui::layout::LayoutTree;
+
+use super::{
+    AndroidLogger, Bus, CommandBuffer, Compositor, ContainerID, Environment, OpaqueComponent,
+    OpaqueContainer,
+};
 
 /// Non-constructable type that implements the platform trait for iOS.
 pub enum Platform {}
@@ -34,13 +35,11 @@ impl polyhorn_core::Platform for Platform {
 
         let env = unsafe { vm.env().prolong_lifetime() };
 
-        let layouter = Arc::new(RwLock::new(Layouter::new()));
-
-        log::trace!("Starting Polyhorn thread ...");
+        let layout_tree = Arc::new(RwLock::new(LayoutTree::new()));
 
         Thread::new(&env, move |env| {
             let environment =
-                Environment::new(activity, unsafe { env.prolong_lifetime() }, layouter);
+                Environment::new(activity, unsafe { env.prolong_lifetime() }, layout_tree);
 
             let mut compositor = Compositor::new(environment);
             let id = compositor.track(container);
@@ -55,12 +54,6 @@ impl polyhorn_core::Platform for Platform {
             })
         })
         .start(&env);
-
-        // std::thread::Builder::new()
-        //     .name("com.glacyr.Polyhorn".to_owned())
-        //     .spawn(move || {
-        //     })
-        //     .unwrap();
 
         struct Connection;
 

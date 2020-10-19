@@ -1,14 +1,13 @@
 use polyhorn_android_sys::{Activity, Env};
+use polyhorn_ui::layout::LayoutTree;
 use std::sync::{Arc, RwLock};
-
-use super::Layouter;
 
 /// Opaque type that wraps the shared layouter.
 #[derive(Clone)]
 pub struct Environment {
     activity: Activity,
     env: Env<'static>,
-    layouter: Arc<RwLock<Layouter>>,
+    layouter: Arc<RwLock<LayoutTree>>,
 }
 
 impl Environment {
@@ -16,7 +15,7 @@ impl Environment {
     pub fn new(
         activity: Activity,
         env: Env<'static>,
-        layouter: Arc<RwLock<Layouter>>,
+        layouter: Arc<RwLock<LayoutTree>>,
     ) -> Environment {
         Environment {
             activity,
@@ -34,7 +33,7 @@ impl Environment {
     }
 
     /// Returns a reference to the shared layouter.
-    pub fn layouter(&mut self) -> &Arc<RwLock<Layouter>> {
+    pub fn layouter(&mut self) -> &Arc<RwLock<LayoutTree>> {
         &self.layouter
     }
 }

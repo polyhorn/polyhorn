@@ -1,6 +1,7 @@
+use polyhorn_ui::layout::LayoutTree;
+
 use super::{
-    Bus, CommandBuffer, Compositor, ContainerID, Environment, Layouter, OpaqueComponent,
-    OpaqueContainer,
+    Bus, CommandBuffer, Compositor, ContainerID, Environment, OpaqueComponent, OpaqueContainer,
 };
 
 /// Non-constructable type that implements the platform trait for iOS.
@@ -23,8 +24,8 @@ impl polyhorn_core::Platform for Platform {
     {
         use std::sync::{Arc, RwLock};
 
-        let layouter = Arc::new(RwLock::new(Layouter::new()));
-        let mut compositor = Compositor::new(layouter.clone());
+        let layout_tree = Arc::new(RwLock::new(LayoutTree::new()));
+        let mut compositor = Compositor::new(layout_tree);
         let id = compositor.track(container);
 
         std::thread::Builder::new()

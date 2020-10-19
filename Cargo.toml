@@ -11,7 +11,6 @@ members = [
     "crates/polyhorn-core",
     "crates/polyhorn-ios",
     "crates/polyhorn-ios-sys",
-    "crates/polyhorn-layout",
     "crates/polyhorn-macros",
     "crates/polyhorn-ui",
     "crates/polyhorn-ui-macros",

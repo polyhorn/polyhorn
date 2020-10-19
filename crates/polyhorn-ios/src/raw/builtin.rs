@@ -3,8 +3,9 @@ use polyhorn_ios_sys::polykit::{
     PLYViewController, PLYWindow,
 };
 use polyhorn_ios_sys::uikit::UIApplication;
+use polyhorn_ui::layout::LayoutNode;
 
-use super::{Container, Environment, Layout, OpaqueContainer, Platform};
+use super::{Container, Environment, OpaqueContainer, Platform};
 
 /// Defines one of the native views that bridge Polyhorn with iOS's UIKit.
 #[derive(Copy, Clone, Debug)]
@@ -57,8 +58,8 @@ impl polyhorn_core::Builtin<Platform> for Builtin {
         environment: &mut Environment,
     ) -> OpaqueContainer {
         let layout = match self {
-            Builtin::Label => Layout::leaf(environment.layouter().clone()),
-            _ => Layout::new(environment.layouter().clone()),
+            Builtin::Label => LayoutNode::leaf(environment.layouter().clone()),
+            _ => LayoutNode::new(environment.layouter().clone()),
         };
 
         match self {
@@ -70,7 +71,7 @@ impl polyhorn_core::Builtin<Platform> for Builtin {
             Builtin::Modal => OpaqueContainer::new(layout, None, PLYViewController::new()),
             Builtin::ScrollView => OpaqueContainer::new(
                 layout,
-                Some(Layout::new(environment.layouter().clone())),
+                Some(LayoutNode::new(environment.layouter().clone())),
                 PLYScrollView::new(),
             ),
             Builtin::TextInput => OpaqueContainer::new(layout, None, PLYTextInputView::new()),

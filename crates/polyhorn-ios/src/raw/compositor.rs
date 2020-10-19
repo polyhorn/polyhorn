@@ -1,9 +1,10 @@
 use dispatch::Queue;
 use polyhorn_core::{Command, Composition};
+use polyhorn_ui::layout::LayoutTree;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, RwLock};
 
-use super::{Environment, Layouter, OpaqueContainer, Platform, QueueBound};
+use super::{Environment, OpaqueContainer, Platform, QueueBound};
 
 /// Concrete implementation of a compositor that is responsible for adding and
 /// removing native views from the native view hierarchy based on the virtual
@@ -12,12 +13,12 @@ use super::{Environment, Layouter, OpaqueContainer, Platform, QueueBound};
 pub struct Compositor {
     buffer: Arc<QueueBound<Composition<Platform>>>,
     counter: Arc<AtomicUsize>,
-    layouter: Arc<RwLock<Layouter>>,
+    layouter: Arc<RwLock<LayoutTree>>,
 }
 
 impl Compositor {
     /// Returns a new compositor with the given shared layouter.
-    pub fn new(layouter: Arc<RwLock<Layouter>>) -> Compositor {
+    pub fn new(layouter: Arc<RwLock<LayoutTree>>) -> Compositor {
         Compositor {
             buffer: Arc::new(QueueBound::new(Queue::main(), || Default::default())),
             counter: Arc::new(AtomicUsize::default()),

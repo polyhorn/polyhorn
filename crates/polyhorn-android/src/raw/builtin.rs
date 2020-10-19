@@ -1,6 +1,7 @@
-use super::{Container, Environment, Layout, OpaqueContainer, Platform};
-
 use polyhorn_android_sys::View;
+use polyhorn_ui::layout::LayoutNode;
+
+use super::{Container, Environment, OpaqueContainer, Platform};
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub enum Builtin {
@@ -20,8 +21,8 @@ impl polyhorn_core::Builtin<Platform> for Builtin {
         environment: &mut Environment,
     ) -> OpaqueContainer {
         let layout = match self {
-            Builtin::Label => Layout::leaf(environment.layouter().clone()),
-            _ => Layout::new(environment.layouter().clone()),
+            Builtin::Label => LayoutNode::leaf(environment.layouter().clone()),
+            _ => LayoutNode::new(environment.layouter().clone()),
         };
 
         let view = View::new(environment.env(), environment.activity());

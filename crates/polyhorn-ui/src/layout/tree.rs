@@ -1,23 +1,38 @@
-use polyhorn_layout::algorithm::yoga::{Flexbox, Node};
-use polyhorn_layout::algorithm::Algorithm;
-use polyhorn_layout::MeasureFunc;
-use polyhorn_ui::geometry::{Dimension, Size};
-use polyhorn_ui::styles::ViewStyle;
 use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
 
-/// Layouter that manages the flexbox algorithm and some additional details,
+use super::algorithm::{Algorithm, Flexbox, Node};
+use crate::geometry::{Dimension, Point, Size};
+use crate::styles::ViewStyle;
+
+/// Measure function that is called to obtain the intrinsic content size of a
+/// leaf node (e.g. images or text).
+pub enum MeasureFunc {
+    /// Measure function backed by a boxed closure.
+    Boxed(Box<dyn Fn(Size<Dimension<f32>>) -> Size<f32>>),
+}
+
+/// Computed layout of a node.
+pub struct Layout {
+    /// The origin of a node.
+    pub origin: Point<f32>,
+
+    /// The size of a node.
+    pub size: Size<f32>,
+}
+
+/// LayoutTree that manages the flexbox algorithm and some additional details,
 /// like the roots of the layout tree.
-pub struct Layouter {
+pub struct LayoutTree {
     flexbox: Flexbox,
     parents: HashMap<Node, Node>,
     roots: Vec<Node>,
 }
 
-impl Layouter {
-    /// Returns a new layouter.
-    pub fn new() -> Layouter {
-        Layouter {
+impl LayoutTree {
+    /// Returns a new layout tree.
+    pub fn new() -> LayoutTree {
+        LayoutTree {
             flexbox: Flexbox::new(),
             parents: HashMap::new(),
             roots: vec![],
@@ -52,7 +67,7 @@ impl Layouter {
         self.flexbox.add_child(parent, child);
     }
 
-    /// Removes the given node from the layout tree. Note that the layouter
+    /// Removes the given node from the layout tree. Note that the layout tree
     /// internally stores a reference to the parent node of every child node, so
     /// we don't have to pass that to this function.
     pub fn remove(&mut self, node: Node) {
@@ -81,30 +96,27 @@ impl Layouter {
     }
 }
 
-unsafe impl Send for Layouter {}
-unsafe impl Sync for Layouter {}
-
 /// Handle to a node within the layout tree.
 #[derive(Clone)]
-pub struct Layout {
-    layouter: Arc<RwLock<Layouter>>,
+pub struct LayoutNode {
+    layouter: Arc<RwLock<LayoutTree>>,
     node: Node,
 }
 
-impl Layout {
+impl LayoutNode {
     /// Creates a new branch in the layout tree.
-    pub fn new(layouter: Arc<RwLock<Layouter>>) -> Layout {
+    pub fn new(layouter: Arc<RwLock<LayoutTree>>) -> LayoutNode {
         let node = layouter
             .write()
             .unwrap()
             .flexbox_mut()
             .new_node(Default::default(), &[]);
 
-        Layout { layouter, node }
+        LayoutNode { layouter, node }
     }
 
     /// Creates a new leaf in the layout tree.
-    pub fn leaf(layouter: Arc<RwLock<Layouter>>) -> Layout {
+    pub fn leaf(layouter: Arc<RwLock<LayoutTree>>) -> LayoutNode {
         let node = layouter.write().unwrap().flexbox_mut().new_leaf(
             Default::default(),
             MeasureFunc::Boxed(Box::new(|_| Size {
@@ -113,11 +125,11 @@ impl Layout {
             })),
         );
 
-        Layout { layouter, node }
+        LayoutNode { layouter, node }
     }
 
     /// Returns a shared reference to the layout tree.
-    pub fn layouter(&self) -> &Arc<RwLock<Layouter>> {
+    pub fn layouter(&self) -> &Arc<RwLock<LayoutTree>> {
         &self.layouter
     }
 
@@ -157,7 +169,7 @@ impl Layout {
     }
 
     /// Returns the current computed layout.
-    pub fn current(&self) -> polyhorn_layout::Layout {
+    pub fn current(&self) -> Layout {
         self.layouter.read().unwrap().flexbox().layout(self.node)
     }
 }
