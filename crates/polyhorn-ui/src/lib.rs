@@ -19,8 +19,10 @@ pub mod handles;
 pub mod hooks;
 pub mod layout;
 pub mod linalg;
-pub mod macros;
 pub mod physics;
 pub mod prelude;
 pub mod queries;
 pub mod styles;
+
+#[cfg(feature = "macros")]
+pub mod macros;
