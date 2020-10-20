@@ -18,6 +18,16 @@ fn manifest_path() -> Option<PathBuf> {
     None
 }
 
+fn generate_lockfile(path: &Path) -> Option<()> {
+    let mut command = Command::new("cargo");
+    command.args(&["generate-lockfile"]);
+    command.current_dir(path);
+
+    let _ = command.spawn().ok()?.wait();
+
+    Some(())
+}
+
 fn cli_version(path: &Path) -> Option<String> {
     let mut bytes = vec![];
     File::open(path.join(".polyhorn/.crates.toml"))
@@ -88,6 +98,10 @@ fn main() {
         .unwrap_or(std::env::current_dir().unwrap())
         .canonicalize()
         .unwrap();
+
+    if manifest_dir.join("Cargo.toml").exists() && !manifest_dir.join("Cargo.lock").exists() {
+        generate_lockfile(&manifest_dir);
+    }
 
     // Then we check if a version of polyhorn (lib) is already present in the
     // Cargo.lock.
