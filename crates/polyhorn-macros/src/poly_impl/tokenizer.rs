@@ -6,7 +6,7 @@ use super::Error;
 
 pub struct Prop {
     pub name: Ident,
-    pub value: Option<TokenTree>,
+    pub value: Option<Vec<TokenTree>>,
 }
 
 impl ToTokens for Prop {
@@ -14,7 +14,7 @@ impl ToTokens for Prop {
         self.name.to_tokens(tokens);
         tokens.extend(quote! {: });
         if let Some(value) = &self.value {
-            value.to_tokens(tokens);
+            value.iter().for_each(|value| value.to_tokens(tokens));
         } else {
             tokens.extend(quote! {true});
         }
@@ -35,12 +35,25 @@ fn parse_prop(input: &mut Peekable<impl Iterator<Item = TokenTree>>) -> Result<P
         _ => return Ok(Prop { name, value: None }),
     };
 
-    let value = match input.next() {
+    let mut value = vec![match input.peek() {
         Some(TokenTree::Punct(punct)) if punct.as_char() == '>' => {
-            return Err(Error::ExpectedPropertyValue(TokenTree::Punct(punct)))
+            let punct = punct.clone();
+
+            input.next();
+
+            return Err(Error::ExpectedPropertyValue(TokenTree::Punct(punct)));
         }
-        Some(tree) => tree,
-        token => return Err(Error::ExpectedPropertyValue(token.unwrap())),
+        Some(TokenTree::Punct(punct)) if punct.as_char() == '!' => TokenTree::Ident(name.clone()),
+        Some(_) => input.next().unwrap(),
+        None => todo!("Unexpectedly reached end of macro input."),
+    }];
+
+    match input.peek() {
+        Some(TokenTree::Punct(punct)) if punct.as_char() == '!' => {
+            value.push(input.next().unwrap());
+            value.push(input.next().unwrap());
+        }
+        _ => {}
     };
 
     Ok(Prop {

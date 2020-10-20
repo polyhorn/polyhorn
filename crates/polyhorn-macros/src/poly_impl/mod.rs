@@ -1,4 +1,4 @@
-use proc_macro2::{Group, Literal, TokenStream};
+use proc_macro2::{Group, Ident, Literal, TokenStream};
 use std::iter::FromIterator;
 
 mod error;
@@ -140,10 +140,10 @@ impl RegularElement {
                 .iter()
                 .find(|item| item.name.to_string() == "ref")
             {
-                let value = reference.value.clone();
+                let value = reference.value.clone().unwrap();
 
                 quote! {#[allow(unused_braces)]
-                #value}
+                #(#value)*}
             } else {
                 quote!(None)
             };
@@ -168,8 +168,12 @@ impl RegularElement {
                     continue;
                 }
 
+                let value = value
+                    .clone()
+                    .unwrap_or(vec![Ident::new("true", name.span()).into()]);
+
                 props.push(quote! {
-                    #name: #value.into(),
+                    #name: #(#value)*.into(),
                 });
             }
 
@@ -184,7 +188,7 @@ impl RegularElement {
                 .map(|key| {
                     quote! { polyhorn::Key::new(
                         #[allow(unused_braces)]
-                        #key
+                        #(#key)*
                     ) }
                 })
                 .unwrap_or_else(|| quote! { polyhorn::Key::from(polyhorn::hooks::use_id!()) });
