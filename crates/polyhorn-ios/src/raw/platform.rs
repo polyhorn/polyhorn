@@ -31,7 +31,10 @@ impl polyhorn_core::Platform for Platform {
         std::thread::Builder::new()
             .name("com.glacyr.Polyhorn".to_owned())
             .spawn(move || {
-                let mut runtime = tokio::runtime::Runtime::new().unwrap();
+                let runtime = tokio::runtime::Builder::new_current_thread()
+                    .enable_time()
+                    .build()
+                    .unwrap();
                 runtime.block_on(async move {
                     let (evloop, handler) = EventLoop::new();
                     let _compositor = compositor.clone();
