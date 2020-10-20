@@ -2,6 +2,7 @@ use crate::assets::ImageSource;
 use crate::styles::ImageViewStyle;
 
 /// Renders an image source to the screen.
+#[derive(Default)]
 pub struct Image {
     /// Controls the appearance and layout of an Image.
     pub style: ImageViewStyle,

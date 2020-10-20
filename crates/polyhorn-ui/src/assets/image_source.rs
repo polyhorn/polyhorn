@@ -29,6 +29,12 @@ pub enum ImageSource {
     Bytes(Bytes),
 }
 
+impl Default for ImageSource {
+    fn default() -> Self {
+        ImageSource::Placeholder(Size::default())
+    }
+}
+
 impl From<ImageAsset> for ImageSource {
     fn from(asset: ImageAsset) -> Self {
         ImageSource::Asset(asset)
