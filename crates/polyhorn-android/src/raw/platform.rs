@@ -7,7 +7,7 @@ use super::{
     OpaqueContainer,
 };
 
-/// Non-constructable type that implements the platform trait for iOS.
+/// Non-constructable type that implements the platform trait for Android.
 pub enum Platform {}
 
 impl polyhorn_core::Platform for Platform {
