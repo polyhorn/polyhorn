@@ -1,6 +1,6 @@
 [package]
 name = "polyhorn-ios-sys"
-version = "0.2.0"
+version = "0.3.0"
 authors = ["Tim <tim@glacyr.com>"]
 edition = "2018"
 license = "MIT"
@@ -14,4 +14,4 @@ objc = "0.2.7"
 fsize = "0.1.0"
 
 [build-dependencies]
-polyhorn-build = { path = "../polyhorn-build", version = "0.2.0" }
+polyhorn-build = { path = "../polyhorn-build", version = "0.3.0" }

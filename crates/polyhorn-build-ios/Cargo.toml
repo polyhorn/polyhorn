@@ -1,6 +1,6 @@
 [package]
 name = "polyhorn-build-ios"
-version = "0.2.0"
+version = "0.3.0"
 authors = ["Tim <tim@glacyr.com>"]
 edition = "2018"
 license = "MIT"

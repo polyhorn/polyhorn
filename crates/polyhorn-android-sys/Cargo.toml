@@ -1,6 +1,6 @@
 [package]
 name = "polyhorn-android-sys"
-version = "0.2.0"
+version = "0.3.0"
 authors = ["Tim <tim@glacyr.com>"]
 edition = "2018"
 license = "MIT"
@@ -15,4 +15,4 @@ libc = "0.2.79"
 log = "0.4.11"
 
 [build-dependencies]
-polyhorn-build = { path = "../polyhorn-build", version = "0.2.0" }
+polyhorn-build = { path = "../polyhorn-build", version = "0.3.0" }

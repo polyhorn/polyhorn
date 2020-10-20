@@ -1,6 +1,6 @@
 [package]
 name = "casco"
-version = "0.2.0"
+version = "0.3.0"
 authors = ["Tim <tim@glacyr.com>"]
 edition = "2018"
 license = "MIT"
@@ -11,6 +11,6 @@ repository = "https://github.com/polyhorn/polyhorn/tree/crates/casco"
 [lib]
 
 [dependencies]
+derivative = "2.1.1"
 logos = "0.11.4"
 proc-macro2 = "1.0.19"
-derivative = "2.1.1"
