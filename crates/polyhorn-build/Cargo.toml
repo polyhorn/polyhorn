@@ -1,6 +1,6 @@
 [package]
 name = "polyhorn-build"
-version = "0.3.0"
+version = "0.3.1"
 authors = ["Tim <tim@glacyr.com>"]
 edition = "2018"
 license = "MIT"
