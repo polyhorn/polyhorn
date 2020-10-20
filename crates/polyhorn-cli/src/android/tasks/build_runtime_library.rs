@@ -74,15 +74,19 @@ impl BuildRuntimeLibrary {
 
         let mut workspace = Workspace::new(manifest_path, &config).unwrap();
 
-        let targets = workspace
+        for target in workspace
             .current_mut()
             .unwrap()
             .manifest_mut()
-            .targets_mut();
-
-        assert_eq!(targets.len(), 1);
-        assert!(matches!(targets[0].kind(), TargetKind::Lib(_)));
-        targets[0].set_kind(TargetKind::Lib(vec![CrateType::Cdylib]));
+            .targets_mut()
+        {
+            match target.kind() {
+                TargetKind::Lib(_) => {
+                    target.set_kind(TargetKind::Lib(vec![CrateType::Cdylib]));
+                }
+                _ => {}
+            }
+        }
 
         let mut options = CompileOptions::new(&config, CompileMode::Build).unwrap();
         options.target_rustc_args = Some(vec![

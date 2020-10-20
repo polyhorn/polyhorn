@@ -49,7 +49,7 @@ struct Opts {
 #[derive(Clap)]
 enum SubCommand {
     /// Creates a new Polyhorn app in the given directory.
-    New(commands::New),
+    Init(commands::Init),
 
     /// Runs the app on a device or simulator.
     Run(commands::Run),
@@ -68,7 +68,7 @@ pub fn cli() {
     let opts = Opts::parse();
 
     match opts.subcmd {
-        SubCommand::New(new) => new.main(),
+        SubCommand::Init(init) => init.main(),
         SubCommand::Run(run) => run.main(&opts.manifest_path),
     }
 }

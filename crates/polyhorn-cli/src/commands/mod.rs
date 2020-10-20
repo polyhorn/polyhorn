@@ -1,9 +1,9 @@
 //! Implementations for platform-independent Polyhorn-cli commands.
 
-mod new;
+mod init;
 mod run;
 
-pub use new::New;
+pub use init::Init;
 pub use run::Run;
 
 use clap::Clap;
