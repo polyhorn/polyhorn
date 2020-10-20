@@ -18,6 +18,25 @@ fn manifest_path() -> Option<PathBuf> {
     None
 }
 
+fn cli_version(path: &Path) -> Option<String> {
+    let mut bytes = vec![];
+    File::open(path.join(".polyhorn/.crates.toml"))
+        .ok()?
+        .read_to_end(&mut bytes)
+        .ok()?;
+
+    let crates = toml::from_slice::<Crates>(&bytes)?;
+    let key = crates
+        .v1
+        .keys()
+        .find(|key| key.starts_with("polyhorn-cli "));
+
+    key?.split(" ")
+        .skip(1)
+        .next()
+        .map(|version| version.to_owned())
+}
+
 fn install(path: &Path, version: Option<String>) {
     let mut command = Command::new("cargo");
     command.args(&[
@@ -34,7 +53,11 @@ fn install(path: &Path, version: Option<String>) {
         command.args(&["--version", &format!("={}", version)]);
     }
 
-    assert!(command.spawn().unwrap().wait().unwrap().success());
+    match command.status() {
+        Ok(status) if status.success() => {}
+        Ok(status) => std::process::exit(status.code().unwrap()),
+        Err(error) => panic!("Couldn't install polyhorn-cli due to: {:?}", error),
+    }
 }
 
 fn forward(path: &Path, args: &[String]) {
@@ -42,7 +65,11 @@ fn forward(path: &Path, args: &[String]) {
     command.args(args);
     command.current_dir(path);
 
-    assert!(command.status().unwrap().success());
+    match command.status() {
+        Ok(status) if status.success() => {}
+        Ok(status) => std::process::exit(status.code().unwrap()),
+        Err(error) => panic!("Couldn't invoke polyhorn-cli due to: {:?}", error),
+    }
 }
 
 #[derive(Debug, Deserialize)]
@@ -74,21 +101,9 @@ fn main() {
     match package {
         Some(package) => {
             // Check if we need to install a different version.
-            let mut bytes = vec![];
-            File::open(manifest_dir.join(".polyhorn/.crates.toml"))
-                .unwrap()
-                .read_to_end(&mut bytes)
-                .unwrap();
-
-            let crates = toml::from_slice::<Crates>(&bytes).unwrap();
-            let key = crates
-                .v1
-                .keys()
-                .find(|key| key.starts_with("polyhorn-cli "));
-            let version = key.unwrap().split(" ").skip(1).next().unwrap();
-
-            if package.version.to_string() != version {
-                install(&manifest_dir, Some(package.version.to_string()));
+            match cli_version(&manifest_dir) {
+                Some(version) if version == package.version.to_string() => {}
+                _ => install(&manifest_dir, Some(package.version.to_string())),
             }
 
             let args = std::env::args().collect::<Vec<_>>();
@@ -108,7 +123,10 @@ fn main() {
                     install(&manifest_dir, None);
                     forward(&manifest_dir, &["init".to_owned(), name.to_owned()]);
                 }
-                _ => todo!("This command is not yet supported by the CLI wrapper."),
+                _ => {
+                    eprintln!("Polyhorn is not installed in this directory. Create a new project with `polyhorn new [name]`.");
+                    std::process::exit(1);
+                }
             }
         }
     }
