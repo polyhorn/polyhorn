@@ -72,11 +72,12 @@ impl Component for Image {
 
                 if let Some(view) = container.downcast_mut::<PLYImageView>() {
                     if let Some(image) = image.image.as_ref() {
-                        view.set_image(image);
-                    }
-
-                    if let Some(tint_color) = tint_color {
-                        view.set_tint_color(&tint_color.convert());
+                        if let Some(tint_color) = tint_color {
+                            view.set_tint_color(&tint_color.convert());
+                            view.set_image(&image.templated());
+                        } else {
+                            view.set_image(image);
+                        }
                     }
 
                     view.to_view().set_layout(move || {

@@ -25,7 +25,7 @@ fn cli_version(path: &Path) -> Option<String> {
         .read_to_end(&mut bytes)
         .ok()?;
 
-    let crates = toml::from_slice::<Crates>(&bytes)?;
+    let crates = toml::from_slice::<Crates>(&bytes).ok()?;
     let key = crates
         .v1
         .keys()

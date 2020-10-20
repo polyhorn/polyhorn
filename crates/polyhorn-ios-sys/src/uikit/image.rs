@@ -23,10 +23,20 @@ impl UIImage {
             if object.is_null() {
                 None
             } else {
-                let object: *mut Object = msg_send![object, imageWithRenderingMode: 2 as usize];
                 Some(UIImage {
                     object: objc_retain(object),
                 })
+            }
+        }
+    }
+
+    /// Returns a copy of this image with template rendering mode.
+    pub fn templated(&self) -> UIImage {
+        unsafe {
+            let object: *mut Object = msg_send![self.object, imageWithRenderingMode: 2 as usize];
+
+            UIImage {
+                object: objc_retain(object),
             }
         }
     }
