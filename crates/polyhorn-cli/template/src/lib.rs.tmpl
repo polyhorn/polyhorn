@@ -19,10 +19,4 @@ impl Component for App {{
     }}
 }}
 
-#[no_mangle]
-unsafe extern "C" fn __polyhorn_main() {{
-    std::mem::forget(polyhorn::render(
-        || poly!(<App />),
-        polyhorn::raw::OpaqueContainer::root(),
-    ));
-}}
+polyhorn::render!(<App />);

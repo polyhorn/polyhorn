@@ -2,6 +2,7 @@
 
 pub use polyhorn_core::{render, Context, ContextProvider, Key, Link, Reference, State};
 pub use polyhorn_ui::{assets, color, font, geometry, layout, linalg, styles};
+pub use polyhorn_ui_macros::render;
 
 pub mod components;
 // pub mod handles;
