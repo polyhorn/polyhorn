@@ -56,7 +56,8 @@ impl Init {
         let mut file = File::create("Cargo.toml").unwrap();
         file.write_fmt(format_args!(
             include_str!("../../template/Cargo.toml.tmpl"),
-            self.name,
+            name = self.name,
+            version = env!("CARGO_PKG_VERSION"),
         ))
     }
 
