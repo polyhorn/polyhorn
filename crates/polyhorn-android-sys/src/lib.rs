@@ -1,5 +1,6 @@
 mod activity;
 mod bridge;
+mod color;
 mod context;
 mod geometry;
 mod logger;
@@ -10,6 +11,7 @@ mod view;
 
 pub use activity::Activity;
 pub use bridge::{Env, Object, VM};
+pub use color::Color;
 pub use context::Context;
 pub use geometry::Rect;
 pub use logger::{android_log_write, AndroidLogPriority};

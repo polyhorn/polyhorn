@@ -1,6 +1,6 @@
 use jni::objects::JValue;
 
-use super::{Context, Env, Object, Rect, Reference};
+use super::{Color, Context, Env, Object, Rect, Reference};
 
 #[derive(Clone)]
 pub struct View {
@@ -24,20 +24,17 @@ impl View {
         }
     }
 
-    pub fn set_background_color(&mut self, env: &Env, red: u8, green: u8, blue: u8, alpha: f32) {
+    pub fn set_background_color(&mut self, env: &Env, color: Color) {
         unsafe {
-            env.call_method(
-                self.reference.as_object(),
-                "setBackgroundColor",
-                "(I)V",
-                &[JValue::Int(
-                    (0u64
-                        | (((alpha * 255.0) as u64) << 24)
-                        | ((red as u64) << 16)
-                        | ((green as u64) << 8)
-                        | ((blue as u64) << 0)) as i32,
-                )],
-            );
+            match color {
+                Color::Unmanaged(value) => env.call_method(
+                    self.reference.as_object(),
+                    "setBackgroundColor",
+                    "(I)V",
+                    &[JValue::Int(value)],
+                ),
+                Color::Managed(_) => todo!("Managed colors are not yet available on Android."),
+            };
         }
     }
 
