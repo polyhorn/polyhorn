@@ -1,6 +1,6 @@
 [package]
 name = "yoyo-macros"
-version = "0.3.1"
+version = "0.3.2"
 authors = ["Tim <tim@glacyr.com>"]
 edition = "2018"
 license = "MIT"
@@ -21,5 +21,5 @@ strum = "0.19.2"
 strum_macros = "0.19.2"
 syn = "1.0.41"
 
-casco = { path = "../casco", version = "0.3.0" }
-polyhorn-ui = { path = "../polyhorn-ui", features = ["macros"], version = "0.3.0" }
+casco = { path = "../casco", version = "0.3.2" }
+polyhorn-ui = { path = "../polyhorn-ui", features = ["macros"], version = "0.3.2" }

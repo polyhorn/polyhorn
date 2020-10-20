@@ -1,6 +1,6 @@
 [package]
 name = "polyhorn-macros"
-version = "0.3.1"
+version = "0.3.2"
 authors = ["Tim <tim@glacyr.com>"]
 edition = "2018"
 license = "MIT"
