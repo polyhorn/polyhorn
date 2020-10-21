@@ -1,16 +1,8 @@
-use ansi_term::Colour::Red;
-use cargo::core::compiler::{CompileKind, CompileMode, CompileTarget, CrateType};
-use cargo::core::manifest::TargetKind;
-use cargo::core::Workspace;
-use cargo::ops::{compile, CompileOptions};
-use cargo::util::interning::InternedString;
-use cargo::util::Config;
 use std::fs::{create_dir_all, read_dir};
-use std::path::{Path, PathBuf};
 
 use super::{AndroidContext, AndroidError};
 use crate::android::Target;
-use crate::core::{Manager, Task};
+use crate::core::{CargoBuild, Manager, Task};
 
 /// This tasks builds the runtime library for the given target and with the
 /// given profile.
@@ -23,16 +15,35 @@ pub struct BuildRuntimeLibrary {
 }
 
 impl BuildRuntimeLibrary {
-    /// Invokes Cargo to build the runtime library from the given manifest with
-    /// the given toolchain. The polyhorn jar dir will store the products of
-    /// `polyhorn-build-android-jar`, i.e. all bundles of Java code provided by
-    /// the dependencies of the library we're building.
-    pub fn build(
-        &self,
-        toolchain: &Path,
-        manifest_path: &Path,
-        polyhorn_jar_dir: &Path,
-    ) -> Result<PathBuf, AndroidError> {
+    fn setup_env(&self, context: &AndroidContext) -> Result<(), AndroidError> {
+        // We start by locating the toolchain within ndk-bundle.
+        let mut toolchain = context.android_sdk_root.clone().unwrap();
+        toolchain.push("ndk-bundle/toolchains/llvm/prebuilt");
+
+        let toolchain = match read_dir(&toolchain) {
+            Ok(mut dir) => match dir.next() {
+                Some(Ok(entry)) => entry.path(),
+                _ => return Err(AndroidError::AndroidNDKNotFound(toolchain)),
+            },
+            Err(_) => return Err(AndroidError::AndroidNDKNotFound(toolchain)),
+        };
+
+        // And we ask downstream crates that use `polyhorn-build-android` to
+        // store the jars that bundle their "native code" into the `lib` folder
+        // of our Android source tree.
+        let mut polyhorn_jar_dir = context.config.target_dir.clone();
+        polyhorn_jar_dir.push("polyhorn-android/app/libs");
+
+        let _ = create_dir_all(&polyhorn_jar_dir);
+
+        if let Some(android_sdk_root) = context.android_sdk_root.as_ref() {
+            std::env::set_var("ANDROID_SDK_ROOT", android_sdk_root);
+        }
+
+        if let Some(java_home) = context.java_home.as_ref() {
+            std::env::set_var("JAVA_HOME", java_home);
+        }
+
         let mut sysroot = toolchain.to_path_buf();
         sysroot.push("sysroot");
 
@@ -67,46 +78,15 @@ impl BuildRuntimeLibrary {
             format!("--sysroot={}", sysroot.to_str().unwrap()),
         );
 
-        let mut config = Config::default().unwrap();
-        config
-            .configure(0, false, None, false, false, false, &None, &[], &[])
-            .unwrap();
+        std::env::set_var(
+            format!(
+                "CARGO_TARGET_{}_RUSTFLAGS",
+                self.target.llvm_triple.to_uppercase().replace("-", "_")
+            ),
+            "-Clink-arg=-lc++_static -Clink-arg=-lc++abi -Clink-arg=-fuse-ld=lld",
+        );
 
-        let mut workspace = Workspace::new(manifest_path, &config).unwrap();
-
-        for target in workspace
-            .current_mut()
-            .unwrap()
-            .manifest_mut()
-            .targets_mut()
-        {
-            match target.kind() {
-                TargetKind::Lib(_) => {
-                    target.set_kind(TargetKind::Lib(vec![CrateType::Cdylib]));
-                }
-                _ => {}
-            }
-        }
-
-        let mut options = CompileOptions::new(&config, CompileMode::Build).unwrap();
-        options.target_rustc_args = Some(vec![
-            // We statically link to libc++.
-            "-Clink-arg=-lc++_static".to_owned(),
-            "-Clink-arg=-lc++abi".to_owned(),
-            "-Clink-arg=-fuse-ld=lld".to_owned(),
-        ]);
-        options.build_config.requested_profile = InternedString::new(self.profile);
-        options.build_config.requested_kinds = vec![CompileKind::Target(
-            CompileTarget::new(self.target.llvm_triple).unwrap(),
-        )];
-
-        match compile(&workspace, &options) {
-            Ok(mut compilation) => Ok(compilation.cdylibs.remove(0).1),
-            Err(error) => {
-                eprintln!("{}: {:?}", Red.bold().paint("error"), error);
-                Err(AndroidError::CompilationFailure)
-            }
-        }
+        Ok(())
     }
 }
 
@@ -131,49 +111,24 @@ impl Task for BuildRuntimeLibrary {
         mut context: AndroidContext,
         _manager: &mut Manager,
     ) -> Result<AndroidContext, AndroidError> {
-        // We start by locating the toolchain within ndk-bundle.
-        let mut toolchain = context.android_sdk_root.clone().unwrap();
-        toolchain.push("ndk-bundle/toolchains/llvm/prebuilt");
-
-        let toolchain = match read_dir(&toolchain) {
-            Ok(mut dir) => match dir.next() {
-                Some(Ok(entry)) => entry.path(),
-                _ => return Err(AndroidError::AndroidNDKNotFound(toolchain)),
-            },
-            Err(_) => return Err(AndroidError::AndroidNDKNotFound(toolchain)),
-        };
-
-        // Then we locate the Cargo manifest.
-        let mut manifest_path = context.config.manifest_dir.clone();
-        manifest_path.push("Cargo.toml");
-
-        // And we ask downstream crates that use `polyhorn-build-android` to
-        // store the jars that bundle their "native code" into the `lib` folder
-        // of our Android source tree.
-        let mut polyhorn_jar_dir = context.config.manifest_dir.clone();
-        polyhorn_jar_dir.push("target/polyhorn-android/app/libs");
-
-        let _ = create_dir_all(&polyhorn_jar_dir);
-
-        // Cargo wants to start at a new line.
         eprintln!("");
 
-        if let Some(android_sdk_root) = context.android_sdk_root.as_ref() {
-            std::env::set_var("ANDROID_SDK_ROOT", android_sdk_root);
-        }
+        self.setup_env(&context)?;
 
-        if let Some(java_home) = context.java_home.as_ref() {
-            std::env::set_var("JAVA_HOME", java_home);
-        }
+        let name = CargoBuild::new(&context.config.manifest_dir.join("Cargo.toml"))
+            .crate_type("cdylib")
+            .release(self.profile == "release")
+            .target(self.target.llvm_triple)
+            .build()?;
 
-        let result = self.build(&toolchain, &manifest_path, &polyhorn_jar_dir);
+        context.products.insert(
+            self.target.abi.to_owned(),
+            context.config.manifest_dir.join(format!(
+                "target/{}/{}/lib{}.so",
+                self.target.llvm_triple, self.profile, name
+            )),
+        );
 
-        match result {
-            Ok(path) => {
-                context.products.insert(self.target.abi.to_owned(), path);
-                Ok(context)
-            }
-            Err(error) => Err(error),
-        }
+        Ok(context)
     }
 }

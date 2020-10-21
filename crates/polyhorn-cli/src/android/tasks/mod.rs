@@ -108,6 +108,12 @@ pub enum AndroidError {
     IO(std::io::Error),
 }
 
+impl From<std::io::Error> for AndroidError {
+    fn from(error: std::io::Error) -> Self {
+        AndroidError::IO(error)
+    }
+}
+
 impl Task for AndroidTask {
     type Context = AndroidContext;
     type Error = AndroidError;

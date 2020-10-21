@@ -4,7 +4,12 @@
 use ansi_term::Colour::{Cyan, Fixed, Green};
 use indicatif::{ProgressBar, ProgressStyle};
 
+mod cargo_build;
+mod change_crate_type;
 pub mod tasks;
+
+pub use cargo_build::CargoBuild;
+pub use change_crate_type::change_crate_type;
 
 /// Represents an individual task that a CLI command is composed of.
 pub trait Task {
