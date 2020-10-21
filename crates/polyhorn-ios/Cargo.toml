@@ -19,7 +19,6 @@ objc = "0.2.7"
 smart-default = "0.6.0"
 tokio = { version = "0.3.0", features = [ "rt", "stream", "sync", "time" ] }
 
-polyhorn-channel = { path = "../polyhorn-channel", version = "0.3.2" }
 polyhorn-core = { path = "../polyhorn-core", version = "0.3.2" }
 polyhorn-macros = { path = "../polyhorn-macros", version = "0.3.2" }
 polyhorn-ios-sys = { path = "../polyhorn-ios-sys", version = "0.3.2" }

@@ -1,4 +1,4 @@
-use polyhorn_channel::Sender;
+use polyhorn_core::Sender;
 use polyhorn_ui::animation::{Animatable, Animation, Animator, Keyframe, KeyframeAnimation};
 use polyhorn_ui::geometry::Size;
 use polyhorn_ui::linalg::Transform3D;

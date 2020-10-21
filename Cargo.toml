@@ -7,7 +7,6 @@ members = [
     "crates/polyhorn-build",
     "crates/polyhorn-build-android",
     "crates/polyhorn-build-ios",
-    "crates/polyhorn-channel",
     "crates/polyhorn-core",
     "crates/polyhorn-ios",
     "crates/polyhorn-ios-sys",

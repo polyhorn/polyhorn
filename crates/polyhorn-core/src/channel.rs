@@ -1,9 +1,7 @@
 use futures::channel::mpsc::{self, TrySendError};
 use futures::{Future, StreamExt};
-use polyhorn_core::{Link, UseAsync, UseReference};
 
-#[doc(hidden)]
-pub use polyhorn_core::{use_id, Key};
+use crate::{Key, Link, UseAsync, UseReference};
 
 #[macro_export]
 macro_rules! use_channel {

@@ -1,5 +1,4 @@
-use polyhorn_channel::{use_channel, Sender};
-use polyhorn_core::CommandBuffer;
+use polyhorn_core::{use_channel, CommandBuffer, Sender};
 use polyhorn_ios_sys::polykit::PLYWindow;
 use polyhorn_ui::hooks::SafeAreaInsets;
 use std::rc::Rc;

@@ -1,4 +1,5 @@
 mod builtin;
+mod channel;
 mod component;
 mod compositor;
 mod container;
@@ -21,6 +22,7 @@ mod topology;
 mod weak;
 
 pub use builtin::Builtin;
+pub use channel::{Receiver, Sender, UseChannel};
 pub use component::Component;
 pub use compositor::{Command, CommandBuffer, Composition, Compositor};
 pub use container::Container;

@@ -1,5 +1,4 @@
-use polyhorn_channel::use_channel;
-use polyhorn_core::CommandBuffer as _;
+use polyhorn_core::{use_channel, CommandBuffer as _};
 use polyhorn_ios_sys::coregraphics::CGRect;
 use polyhorn_ios_sys::polykit::{PLYCallback, PLYLayoutEvent, PLYView};
 use polyhorn_ui::geometry::Size;

@@ -1,6 +1,6 @@
 use polyhorn::prelude::*;
 use polyhorn::Reference;
-use polyhorn_channel::{use_channel, Receiver};
+use polyhorn_core::{use_channel, Receiver};
 use polyhorn_ui::events::EventListener;
 use polyhorn_ui::geometry::{Dimension, Size};
 use polyhorn_ui::styles::{Position, Transform, ViewStyle};

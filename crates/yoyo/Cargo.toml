@@ -16,7 +16,6 @@ num-traits = "0.2.12"
 
 polyhorn = { path = "../polyhorn", version = "0.3.2" }
 polyhorn-core = { path = "../polyhorn-core", version = "0.3.2" }
-polyhorn-channel = { path = "../polyhorn-channel", version = "0.3.2" }
 polyhorn-ui = { path = "../polyhorn-ui", version = "0.3.2" }
 
 yoyo-macros = { path = "../yoyo-macros", version = "0.3.2" }
