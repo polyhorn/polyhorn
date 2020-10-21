@@ -1,4 +1,4 @@
-//! Tasks and context specific for build and running on Android.
+//! Tasks and context specific for building and running on Android.
 
 use std::collections::HashMap;
 use std::path::PathBuf;
@@ -16,6 +16,8 @@ pub use generate_source_tree::GenerateSourceTree;
 pub use install::Install;
 pub use link_native_libraries::LinkNativeLibraries;
 pub use run::Run;
+
+pub use crate::core::tasks::InstallTarget;
 
 use crate::core::{Manager, Task};
 use crate::Config;
@@ -53,13 +55,17 @@ pub enum AndroidTask {
     /// the SDK, NDK and Java that are all compatible.
     FindAndroidStudio(FindAndroidStudio),
 
-    /// This task copies all products from the `BuildRuntimeLibrary` task into
-    /// the `jniLibs` folder of the Android source tree.
-    LinkNativeLibraries(LinkNativeLibraries),
-
     /// This task invokes Gradle to install a debug-build on the user's device
     /// or emulator.
     Install(Install),
+
+    /// This task installs a target with a given name using rustup, if
+    /// necessary.
+    InstallTarget(InstallTarget),
+
+    /// This task copies all products from the `BuildRuntimeLibrary` task into
+    /// the `jniLibs` folder of the Android source tree.
+    LinkNativeLibraries(LinkNativeLibraries),
 
     /// This task launches the newly installed Polyhorn-powered app on a user's
     /// device or emulator.
@@ -97,6 +103,9 @@ pub enum AndroidError {
     /// implemented, but couldn't find it at the expected path (which is given
     /// as an argument).
     AndroidNDKNotFound(PathBuf),
+
+    /// Returned by tasks when an io error occurs.
+    IO(std::io::Error),
 }
 
 impl Task for AndroidTask {
@@ -110,6 +119,7 @@ impl Task for AndroidTask {
             AndroidTask::GenerateSourceTree(task) => task.verb(),
             AndroidTask::LinkNativeLibraries(task) => task.verb(),
             AndroidTask::Install(task) => task.verb(),
+            AndroidTask::InstallTarget(task) => task.verb(),
             AndroidTask::Run(task) => task.verb(),
         }
     }
@@ -121,6 +131,7 @@ impl Task for AndroidTask {
             AndroidTask::GenerateSourceTree(task) => task.message(),
             AndroidTask::LinkNativeLibraries(task) => task.message(),
             AndroidTask::Install(task) => task.message(),
+            AndroidTask::InstallTarget(task) => task.message(),
             AndroidTask::Run(task) => task.message(),
         }
     }
@@ -132,6 +143,7 @@ impl Task for AndroidTask {
             AndroidTask::GenerateSourceTree(task) => task.detail(),
             AndroidTask::LinkNativeLibraries(task) => task.detail(),
             AndroidTask::Install(task) => task.detail(),
+            AndroidTask::InstallTarget(task) => task.detail(),
             AndroidTask::Run(task) => task.detail(),
         }
     }
@@ -147,6 +159,10 @@ impl Task for AndroidTask {
             AndroidTask::GenerateSourceTree(task) => task.run(context, manager),
             AndroidTask::LinkNativeLibraries(task) => task.run(context, manager),
             AndroidTask::Install(task) => task.run(context, manager),
+            AndroidTask::InstallTarget(task) => task
+                .run((), manager)
+                .map_err(|error| AndroidError::IO(error))
+                .map(|_| context),
             AndroidTask::Run(task) => task.run(context, manager),
         }
     }

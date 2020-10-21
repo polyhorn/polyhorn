@@ -4,7 +4,7 @@
 use ansi_term::Colour::{Cyan, Fixed, Green};
 use indicatif::{ProgressBar, ProgressStyle};
 
-pub mod cargo;
+pub mod tasks;
 
 /// Represents an individual task that a CLI command is composed of.
 pub trait Task {

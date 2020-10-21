@@ -11,6 +11,7 @@ use crate::Config;
 pub fn run(config: Config) {
     let result = Executioner::execute(
         &[
+            AndroidTask::InstallTarget(tasks::InstallTarget(Target::armeabi_v7a().llvm_triple)),
             AndroidTask::FindAndroidStudio(tasks::FindAndroidStudio),
             AndroidTask::GenerateSourceTree(tasks::GenerateSourceTree),
             AndroidTask::BuildRuntimeLibrary(tasks::BuildRuntimeLibrary {
