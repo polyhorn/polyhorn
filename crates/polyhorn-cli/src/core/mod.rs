@@ -6,10 +6,12 @@ use indicatif::{ProgressBar, ProgressStyle};
 
 mod cargo_build;
 mod change_crate_type;
+mod rasterize;
 pub mod tasks;
 
 pub use cargo_build::CargoBuild;
 pub use change_crate_type::change_crate_type;
+pub use rasterize::rasterize;
 
 /// Represents an individual task that a CLI command is composed of.
 pub trait Task {

@@ -1,6 +1,6 @@
 //! Cubic Bezier curves (incl. root finding) suitable for animation.
 
-use num::{Float, NumCast};
+use num_traits::{Float, NumCast};
 
 use super::{Approximation, Curve};
 

@@ -1,7 +1,8 @@
 //! Instantaneous movement after a delay.
 
+use num_traits::Float;
+
 use super::{Approximation, Curve};
-use num::Float;
 
 /// Instantaneous movement after a delay.
 #[derive(Copy, Clone, Debug)]

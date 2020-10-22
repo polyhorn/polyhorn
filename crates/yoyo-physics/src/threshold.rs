@@ -1,6 +1,6 @@
 //! Threshold traits and types that are used to stop a pending animation.
 
-use num::Float;
+use num_traits::Float;
 
 use super::Approximation;
 

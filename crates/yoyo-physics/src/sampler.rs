@@ -1,4 +1,4 @@
-use num::{Float, NumCast};
+use num_traits::{Float, NumCast};
 
 use super::{Approximation, Curve, Threshold};
 use crate::threshold::{And, DisplacementThreshold, VelocityThreshold};

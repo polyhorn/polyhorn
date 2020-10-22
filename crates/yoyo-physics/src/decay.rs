@@ -3,7 +3,7 @@
 //! This implementation is derived from a JavaScript implementation at
 //! [https://github.com/framer/motion](https://github.com/framer/motion).
 
-use num::{Float, NumCast};
+use num_traits::{Float, NumCast};
 
 use super::{Approximation, Curve};
 

@@ -1,6 +1,8 @@
 //! Lexer implementation that turns a string into a spanned concrete token
 //! stream.
 
+#![cfg(feature = "lexer")]
+
 use logos::Logos;
 
 use crate::concrete::{

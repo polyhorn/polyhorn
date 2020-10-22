@@ -6,8 +6,9 @@
 //! that we measure time in seconds, whereas in JavaScript time is measured in
 //! milliseconds.
 
+use num_traits::{Float, NumCast};
+
 use super::{Approximation, Curve};
-use num::{Float, NumCast};
 
 /// This is a spring whose oscillation and velocity we can efficiently
 /// approximate.

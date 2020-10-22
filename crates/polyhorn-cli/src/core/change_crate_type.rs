@@ -1,7 +1,7 @@
 use std::fs::{remove_file, File, OpenOptions};
 use std::io::{copy, Read, Result, Seek, SeekFrom, Write};
 use std::path::{Path, PathBuf};
-use toml_edit::{value, Array, Document};
+use toml::Value;
 
 pub struct ChangeCrateTypeGuard {
     source: String,
@@ -38,11 +38,15 @@ impl ChangeCrateTypeGuard {
         source_file.seek(SeekFrom::Start(0)).unwrap();
         source_file.read_to_string(&mut source).unwrap();
 
-        let mut crate_types = Array::default();
-        crate_types.push(crate_type).unwrap();
-
-        let mut document = source.parse::<Document>().unwrap();
-        document["lib"]["crate-type"] = value(crate_types);
+        let mut document = source.parse::<Value>().unwrap();
+        document
+            .as_table_mut()
+            .unwrap()
+            .entry("lib")
+            .or_insert(Value::Table(Default::default()))
+            .as_table_mut()
+            .unwrap()
+            .insert("crate-type".to_owned(), vec![crate_type.to_owned()].into());
 
         source_file.seek(SeekFrom::Start(0)).unwrap();
         source_file.set_len(0).unwrap();

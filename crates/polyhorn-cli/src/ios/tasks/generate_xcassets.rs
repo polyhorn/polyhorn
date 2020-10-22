@@ -1,5 +1,5 @@
 use super::{IOSContext, IOSError};
-use crate::core::{Manager, Task};
+use crate::core::{rasterize, Manager, Task};
 use crate::ios::xcassets::{Folder, Image, ImageSet, Info, Properties, XcAssets};
 
 /// This task generates an Xcode-compatible assets catalog for the assets of
@@ -232,21 +232,13 @@ impl Task for GenerateXcassets {
                         result_path.push(name.to_owned() + ".imageset");
                         let _ = std::fs::create_dir_all(&result_path);
 
-                        let zooms = [
-                            ("1x", usvg::FitTo::Original),
-                            ("2x", usvg::FitTo::Zoom(2.0)),
-                            ("3x", usvg::FitTo::Zoom(3.0)),
-                        ];
+                        let zooms = [("1x", 1.0), ("2x", 2.0), ("3x", 3.0)];
 
                         for &(suffix, zoom) in &zooms {
                             let mut result_path = result_path.clone();
                             result_path.push("image".to_owned() + "@" + suffix + ".png");
 
-                            let tree =
-                                usvg::Tree::from_file(entry.path(), &usvg::Options::default())
-                                    .unwrap();
-                            let image = resvg::render(&tree, zoom, None).unwrap();
-                            image.save_png(result_path).unwrap();
+                            rasterize(&entry.path(), zoom, &result_path).unwrap();
                         }
 
                         result_path.push("Contents.json");

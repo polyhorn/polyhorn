@@ -23,3 +23,6 @@ syn = "1.0.41"
 
 casco = { path = "../casco", version = "0.3.2" }
 polyhorn-ui = { path = "../polyhorn-ui", features = ["macros"], version = "0.3.2" }
+
+[dev-dependencies]
+casco = { path = "../casco", version = "0.3.2", features = ["lexer"] }

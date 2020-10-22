@@ -12,5 +12,10 @@ repository = "https://github.com/polyhorn/polyhorn/tree/crates/casco"
 
 [dependencies]
 derivative = "2.1.1"
-logos = "0.11.4"
 proc-macro2 = "1.0.19"
+
+# lexer
+logos = { version = "0.11.4", optional = true }
+
+[features]
+lexer = ["logos"]
