@@ -49,8 +49,16 @@ impl Component for Image {
                     size,
                 }
             }
+            ImageSource::Bytes(bytes) => {
+                let image = UIImage::with_data(&bytes).unwrap();
+                let size = Size::new(image.size().width as f32, image.size().height as f32);
+
+                ConcreteImage {
+                    image: Some(image),
+                    size,
+                }
+            }
             ImageSource::Placeholder(size) => ConcreteImage { image: None, size },
-            _ => unimplemented!("Image sources backed by buffers are not yet implemented."),
         };
 
         let width = Dimension::Points(image.size.width);

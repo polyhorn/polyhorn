@@ -46,3 +46,9 @@ impl From<Bytes> for ImageSource {
         ImageSource::Bytes(bytes)
     }
 }
+
+impl From<&'static [u8]> for ImageSource {
+    fn from(bytes: &'static [u8]) -> Self {
+        ImageSource::Bytes(Bytes::from_static(bytes))
+    }
+}
