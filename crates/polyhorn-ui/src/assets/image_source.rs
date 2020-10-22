@@ -29,6 +29,13 @@ pub enum ImageSource {
     Bytes(Bytes),
 }
 
+impl ImageSource {
+    /// Returns a placeholder image source with the given width and height.
+    pub fn placeholder(width: f32, height: f32) -> ImageSource {
+        ImageSource::Placeholder(Size::new(width, height))
+    }
+}
+
 impl Default for ImageSource {
     fn default() -> Self {
         ImageSource::Placeholder(Size::default())
