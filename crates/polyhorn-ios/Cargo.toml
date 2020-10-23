@@ -17,7 +17,7 @@ futures = "0.3.5"
 lazy_static = "1.4.0"
 objc = "0.2.7"
 smart-default = "0.6.0"
-tokio = { version = "0.3.0", features = [ "rt", "stream", "sync", "time" ] }
+tokio = { version = "0.2.5", features = [ "rt-core", "stream", "sync", "time" ] }
 
 polyhorn-core = { path = "../polyhorn-core", version = "0.3.2" }
 polyhorn-macros = { path = "../polyhorn-macros", version = "0.3.2" }
