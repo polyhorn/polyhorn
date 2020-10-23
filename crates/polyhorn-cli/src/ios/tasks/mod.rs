@@ -24,6 +24,7 @@ pub use open_ios_simulator::OpenIOSSimulator;
 pub use run_on_ios_simulator::RunOnIOSSimulator;
 
 pub use crate::core::tasks::InstallTarget;
+pub use crate::core::tasks::{Dependency, DependencyCheck, InstallDependencies};
 
 use crate::core::{Manager, Task};
 use crate::ios::simctl;
@@ -66,6 +67,10 @@ pub enum IOSTask {
 
     /// This task generates an xcodeproj.
     GenerateXcodeproj(GenerateXcodeproj),
+
+    /// This task checks if a given set of dependencies exist and if necessary,
+    /// installs the dependencies that weren't found.
+    InstallDependencies(InstallDependencies),
 
     /// This task installs an application on the iOS Simulator with a given
     /// identifier.
@@ -123,6 +128,7 @@ impl Task for IOSTask {
             IOSTask::CreateUniversalBinary(task) => task.verb(),
             IOSTask::GenerateXcassets(task) => task.verb(),
             IOSTask::GenerateXcodeproj(task) => task.verb(),
+            IOSTask::InstallDependencies(task) => task.verb(),
             IOSTask::InstallOnIOSSimulator(task) => task.verb(),
             IOSTask::InstallTarget(task) => task.verb(),
             IOSTask::OpenIOSSimulator(task) => task.verb(),
@@ -138,6 +144,7 @@ impl Task for IOSTask {
             IOSTask::CreateUniversalBinary(task) => task.message(),
             IOSTask::GenerateXcassets(task) => task.message(),
             IOSTask::GenerateXcodeproj(task) => task.message(),
+            IOSTask::InstallDependencies(task) => task.message(),
             IOSTask::InstallOnIOSSimulator(task) => task.message(),
             IOSTask::InstallTarget(task) => task.message(),
             IOSTask::OpenIOSSimulator(task) => task.message(),
@@ -153,6 +160,7 @@ impl Task for IOSTask {
             IOSTask::CreateUniversalBinary(task) => task.detail(),
             IOSTask::GenerateXcassets(task) => task.detail(),
             IOSTask::GenerateXcodeproj(task) => task.detail(),
+            IOSTask::InstallDependencies(task) => task.detail(),
             IOSTask::InstallOnIOSSimulator(task) => task.detail(),
             IOSTask::InstallTarget(task) => task.detail(),
             IOSTask::OpenIOSSimulator(task) => task.detail(),
@@ -172,6 +180,10 @@ impl Task for IOSTask {
             IOSTask::CreateUniversalBinary(task) => task.run(context, manager),
             IOSTask::GenerateXcassets(task) => task.run(context, manager),
             IOSTask::GenerateXcodeproj(task) => task.run(context, manager),
+            IOSTask::InstallDependencies(task) => task
+                .run((), manager)
+                .map_err(|error| IOSError::IO(error))
+                .map(|_| context),
             IOSTask::InstallOnIOSSimulator(task) => task.run(context, manager),
             IOSTask::InstallTarget(task) => task
                 .run((), manager)

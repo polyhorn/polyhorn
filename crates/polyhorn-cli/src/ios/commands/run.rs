@@ -14,6 +14,20 @@ pub fn run(config: Config) {
 
     let result = Executioner::execute(
         &[
+            IOSTask::InstallDependencies(tasks::InstallDependencies {
+                dependencies: vec![
+                    tasks::Dependency::cli(
+                        "resvg",
+                        &["resvg", "-V"],
+                        &["cargo", "install", "resvg"],
+                    ),
+                    tasks::Dependency::cli(
+                        "xcodegen",
+                        &["xcodegen", "--version"],
+                        &["brew", "install", "xcodegen"],
+                    ),
+                ],
+            }),
             IOSTask::InstallTarget(tasks::InstallTarget("x86_64-apple-ios")),
             IOSTask::BuildRuntimeLibrary(tasks::BuildRuntimeLibrary {
                 target: "x86_64-apple-ios",
