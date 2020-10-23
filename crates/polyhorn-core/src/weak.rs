@@ -93,8 +93,8 @@ where
         WeakReference(weak, reference)
     }
 
-    pub fn replace(&self, value: T) -> Option<T> {
-        self.0.with_link(|link| self.1.replace(link, value))
+    pub fn replace(&self, value: impl Into<T>) -> Option<T> {
+        self.0.with_link(|link| self.1.replace(link, value.into()))
     }
 
     pub fn apply<F, O>(&self, op: F) -> Option<O>

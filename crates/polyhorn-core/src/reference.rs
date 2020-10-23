@@ -67,6 +67,24 @@ where
 
 impl<T> Reference<T>
 where
+    T: Clone + 'static,
+{
+    pub fn cloned<L>(self, link: &L) -> T
+    where
+        L: Link,
+    {
+        assert_eq!(self.instance_id, link.instance().id);
+
+        link.memory()
+            .reference(self.reference_id)
+            .downcast_ref::<T>()
+            .unwrap()
+            .clone()
+    }
+}
+
+impl<T> Reference<T>
+where
     T: Default + 'static,
 {
     pub fn take<L>(&self, link: &L) -> T
