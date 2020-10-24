@@ -5,7 +5,6 @@ use super::tokenizer::Path;
 pub enum Error {
     ExpectedPropertyName(TokenTree),
     ExpectedPropertyValue(TokenTree),
-    ExpectedDot(TokenTree),
     ExpectedIdentifier(TokenTree),
     ExpectedColon(TokenTree),
     ExpectedClosingAngle(TokenTree),
@@ -23,7 +22,6 @@ impl Error {
             Error::ExpectedPropertyValue(token) => {
                 format!("Expected property value, got `{}` instead.", token)
             }
-            Error::ExpectedDot(token) => format!("Expected `...`, got `{}` instead.", token),
             Error::ExpectedIdentifier(token) => {
                 format!("Expected identifier, got `{}` instead.", token)
             }
@@ -44,7 +42,6 @@ impl Error {
         match self {
             Error::ExpectedPropertyName(token) => token.span(),
             Error::ExpectedPropertyValue(token) => token.span(),
-            Error::ExpectedDot(token) => token.span(),
             Error::ExpectedIdentifier(token) => token.span(),
             Error::ExpectedColon(token) => token.span(),
             Error::ExpectedClosingAngle(token) => token.span(),
@@ -58,7 +55,6 @@ impl Error {
         match self {
             Error::ExpectedPropertyName(token) => token.span(),
             Error::ExpectedPropertyValue(token) => token.span(),
-            Error::ExpectedDot(token) => token.span(),
             Error::ExpectedIdentifier(token) => token.span(),
             Error::ExpectedColon(token) => token.span(),
             Error::ExpectedClosingAngle(token) => token.span(),

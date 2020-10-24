@@ -62,22 +62,10 @@ fn parse_prop(input: &mut Peekable<impl Iterator<Item = TokenTree>>) -> Result<P
     })
 }
 
-fn parse_dots(input: &mut Peekable<impl Iterator<Item = TokenTree>>) -> Result<(), Error> {
-    for _ in 0..3 {
-        match input.next() {
-            Some(TokenTree::Punct(punct)) if punct.as_char() == '.' => {}
-            token => return Err(Error::ExpectedDot(token.unwrap())),
-        }
-    }
-
-    Ok(())
-}
-
 pub struct TagOpen {
     pub is_builtin: bool,
     pub path: Path,
     pub props: Vec<Prop>,
-    pub is_default: bool,
     pub is_self_closing: bool,
 }
 
@@ -326,30 +314,10 @@ pub fn parse_token(input: &mut Peekable<impl Iterator<Item = TokenTree>>) -> Res
 
     let mut props = vec![];
 
-    let mut is_default = false;
-
     let mut is_self_closing = false;
 
     loop {
         match input.peek() {
-            Some(TokenTree::Punct(punct)) if punct.as_char() == '.' => {
-                parse_dots(input)?;
-
-                is_default = true;
-
-                match input.next() {
-                    Some(TokenTree::Punct(punct)) if punct.as_char() == '>' => break,
-                    Some(TokenTree::Punct(punct)) if punct.as_char() == '/' => {
-                        is_self_closing = true;
-
-                        match input.next() {
-                            Some(TokenTree::Punct(punct)) if punct.as_char() == '>' => break,
-                            token => return Err(Error::ExpectedClosingAngle(token.unwrap())),
-                        }
-                    }
-                    token => return Err(Error::ExpectedClosingAngle(token.unwrap())),
-                }
-            }
             Some(TokenTree::Punct(punct)) if punct.as_char() == '/' => {
                 is_self_closing = true;
 
@@ -372,7 +340,6 @@ pub fn parse_token(input: &mut Peekable<impl Iterator<Item = TokenTree>>) -> Res
         is_builtin,
         path,
         props,
-        is_default,
         is_self_closing,
     }))
 }

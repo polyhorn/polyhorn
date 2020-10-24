@@ -15,6 +15,7 @@ impl Default for StatusBarStyle {
 }
 
 /// Controls the appearance of the system status bar on iOS and Android.
+#[derive(Default)]
 pub struct StatusBar {
     /// Controls the style (i.e. color of text and symbols) of the status bar.
     pub style: StatusBarStyle,

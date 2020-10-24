@@ -1,6 +1,7 @@
 use crate::styles::TextStyle;
 
 /// Renders (rich) text to the screen.
+#[derive(Default)]
 pub struct Text {
     /// Controls the appearance and layout of this text. Note that the
     /// layout-related style properties are only honored if this text is

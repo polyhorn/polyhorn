@@ -29,7 +29,7 @@ impl Component for TouchableOpacity {
     fn render(&self, manager: &mut Manager) -> Element {
         poly!(<yoyo::View::<States> variant={ States::Initial } style={ self.style.clone() }
                       on_pointer_down={ self.on_pointer_down.clone() }
-                        on_pointer_up={ self.on_pointer_up.clone() } ...>
+                        on_pointer_up={ self.on_pointer_up.clone() }>
             { manager.children() }
         </yoyo::View::<States>>)
     }

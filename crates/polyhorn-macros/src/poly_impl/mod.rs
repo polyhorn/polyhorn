@@ -1,4 +1,4 @@
-use proc_macro2::{Group, Ident, Literal, TokenStream};
+use proc_macro2::{Group, Ident, Literal, TokenStream, TokenTree};
 use std::iter::FromIterator;
 
 mod error;
@@ -157,6 +157,7 @@ impl RegularElement {
             let mut props = vec![];
 
             let mut key = None;
+            let mut is_default = true;
 
             for prop in &self.open.props {
                 let name = &prop.name;
@@ -164,6 +165,14 @@ impl RegularElement {
 
                 if prop.name == "key" {
                     key = value.clone();
+
+                    continue;
+                } else if prop.name == "default" {
+                    is_default = match value.as_ref().map(|value| value.as_slice()) {
+                        Some([TokenTree::Ident(ident)]) if ident.to_string() == "true" => false,
+                        Some([TokenTree::Ident(ident)]) if ident.to_string() == "false" => false,
+                        _ => todo!("Prop `default` must be either true or false."),
+                    };
 
                     continue;
                 }
@@ -179,7 +188,7 @@ impl RegularElement {
 
             let props = TokenStream::from_iter(props);
 
-            let dots = match self.open.is_default {
+            let dots = match is_default {
                 true => quote! { ..Default::default() },
                 false => quote! {},
             };

@@ -250,7 +250,7 @@ where
                                on_pointer_cancel={ on_pointer_cancel }
                                  on_pointer_down={ on_pointer_down }
                                      on_layout={ on_layout }
-                                   on_pointer_up={ on_pointer_up } ...>
+                                   on_pointer_up={ on_pointer_up }>
             { manager.children() }
         </polyhorn::prelude::View>)
     }

@@ -101,7 +101,7 @@ where
                     };
 
                     poly!(
-                        <ContextProvider key={ id } value=presence>
+                        <ContextProvider key={ id } value=presence default=false>
                             { element }
                         </ContextProvider>
                     )
