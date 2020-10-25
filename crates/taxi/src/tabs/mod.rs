@@ -54,16 +54,16 @@ where
             });
             items.push(poly!(
                 <TabBarItem key=i selected=is_selected title=title
-                       on_press=on_press ... />
+                       on_press=on_press />
             ));
         }
 
         poly!(<View style={ style! {
             flex-grow: 1.0;
-        } } ...>
+        } }>
             <View style={ style! {
                 flex-grow: 1.0;
-            } } ...>
+            } }>
                 <NavigationProvider on_navigate=on_navigate on_pop=on_pop>
                     { Element::new(Key::new(()), selected.apply(manager, |selected| selected.clone()).into(), Element::fragment(Key::new(()), vec![])) }
                 </NavigationProvider>

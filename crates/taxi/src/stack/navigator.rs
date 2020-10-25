@@ -76,15 +76,15 @@ where
         let last = selected.last().cloned().unwrap();
 
         let containers: Vec<_> = selected.into_iter().enumerate().map(|(i, screen)| {
-            poly!(<ScreenContainer::<T> key={ i } depth={ depth - i } screen=screen />)
+            poly!(<ScreenContainer::<T> key={ i } depth={ depth - i } screen=screen default=false />)
         }).collect();
 
         poly!(<View style={ style! {
             flex-grow: 1.0;
-        } } ...>
+        } }>
             <NavigationProvider on_navigate=on_navigate on_pop=on_pop>
                 <NavigationBar style={ self.header_style.clone() }>
-                    <yoyo::AnimatePresence::<ItemContext> initial=false ...>
+                    <yoyo::AnimatePresence::<ItemContext> initial=false>
                         <NavigationItem key={ ("Item", depth) }
                                  tint_color={ self.header_tint_color }
                                        left={ Element::empty() }
@@ -100,8 +100,8 @@ where
                 </NavigationBar>
                 <View style={ style! {
                     flex-grow: 1.0;
-                } } ...>
-                    <yoyo::AnimatePresence::<ContainerContext> initial=false ...>
+                } }>
+                    <yoyo::AnimatePresence::<ContainerContext> initial=false>
                         { containers }
                     </yoyo::AnimatePresence::<ContainerContext>>
                 </View>

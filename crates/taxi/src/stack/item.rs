@@ -6,6 +6,7 @@ use polyhorn_ui::styles::{ImageStyle, Inherited, TextAlign, TextStyle};
 
 use super::ItemContext;
 
+#[derive(Default)]
 pub struct NavigationItem {
     pub on_back_press: EventListener<()>,
     pub left: Element,
@@ -39,20 +40,20 @@ impl Component for NavigationItem {
             flex-grow: 1.0;
             flex-direction: row;
             justify-content: center;
-        } } presence={ presence.into_dyn() } ...>
+        } } presence={ presence.into_dyn() }>
             <View style={ style! {
                 flex-direction: row;
                 flex-shrink: 0.0;
                 flex-grow: 1.0;
                 flex-basis: 32px;
                 justify-content: flex-start;
-            } } ...>
+            } }>
                 { if self.on_back_press.is_some() {
                     Some(poly!(<yoyo::TouchableOpacity style={ style! {
                         flex-direction: row;
                         align-items: center;
                         padding: 0px 12px;
-                    } } on_pointer_up={ self.on_back_press.clone() } ...>
+                    } } on_pointer_up={ self.on_back_press.clone() }>
                         <Image source={ ImageSource::Asset(asset!("back")) }
                                 style={ ImageStyle {
                             tint_color: Some(self.tint_color),
@@ -60,7 +61,7 @@ impl Component for NavigationItem {
                         } } />
                         <View style={ style! {
                             width: 6px;
-                        } } ... />
+                        } } />
                         <Text style={ TextStyle {
                                 color: Inherited::Specified(self.tint_color),
                             ..style! {
@@ -80,7 +81,7 @@ impl Component for NavigationItem {
                 justify-content: center;
                 flex-grow: 1.0;
                 flex-basis: auto;
-            } } ...>
+            } }>
                 { match self.title {
                     Element::String(_) => poly!(
                         <Text style={ TextStyle {
@@ -99,14 +100,14 @@ impl Component for NavigationItem {
                 flex-grow: 1.0;
                 flex-basis: 32px;
                 justify-content: flex-end;
-            } } ...>
+            } }>
                 { match self.right {
                     Element::String(_) => poly!(
                         <yoyo::TouchableOpacity style={ style! {
                             flex-direction: row;
                             align-items: center;
                             padding: 0px 12px;
-                        } } ...>
+                        } }>
                             <Text style={ TextStyle {
                                 color: Inherited::Specified(self.tint_color),
                                 ..style! {

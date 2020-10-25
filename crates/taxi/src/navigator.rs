@@ -22,6 +22,7 @@ pub struct NavigationContext<T> {
     on_pop: EventListener<()>,
 }
 
+#[derive(Default)]
 pub struct NavigationProvider<T> {
     pub on_navigate: EventListener<T>,
     pub on_pop: EventListener<()>,
@@ -36,7 +37,7 @@ where
             on_navigate: self.on_navigate.clone(),
             on_pop: self.on_pop.clone(),
         });
-        poly!(<ContextProvider::<NavigationContext::<T>> value=value>
+        poly!(<ContextProvider::<NavigationContext::<T>> value=value default=false>
             { manager.children() }
         </ContextProvider::<NavigationContext::<T>>>)
     }

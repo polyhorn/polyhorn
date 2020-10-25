@@ -64,9 +64,9 @@ where
 
         poly!(<View style={ style! {
             flex-grow: 1.0;
-        } } ...>
+        } }>
             <NavigationProvider on_navigate=on_navigate on_pop=on_pop>
-                <AnimatePresence::<ModalContext> ...>
+                <AnimatePresence::<ModalContext>>
                     { containers }
                 </AnimatePresence::<ModalContext>>
             </NavigationProvider>

@@ -3,6 +3,7 @@ use polyhorn_ui::color::Color;
 use polyhorn_ui::events::EventListener;
 use polyhorn_ui::styles::{Inherited, TextStyle, ViewStyle};
 
+#[derive(Default)]
 pub struct TabBar {}
 
 impl Component for TabBar {
@@ -15,7 +16,7 @@ impl Component for TabBar {
                 height: 83px;
                 padding: 0px 0px 24px 0px;
             }
-        } } ...>
+        } }>
             { manager.children() }
         </View>)
     }
@@ -40,7 +41,7 @@ impl Component for TabBarItem {
             flex-grow: 1.0;
             align-items: center;
             justify-content: center;
-        } } on_pointer_up={ self.on_press.clone() } ...>
+        } } on_pointer_up={ self.on_press.clone() }>
             <View style={ ViewStyle {
                 background_color: tint,
                 ..style! {
@@ -49,7 +50,7 @@ impl Component for TabBarItem {
                     height: 28px;
                     margin: 0px 0px 2px 0px;
                 }
-            } } ... />
+            } } />
             <Text style={ TextStyle {
                 color: Inherited::Specified(tint),
                 ..style! {

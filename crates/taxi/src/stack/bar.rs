@@ -3,6 +3,7 @@ use polyhorn_ui::geometry::{ByEdge, Dimension, Size};
 use polyhorn_ui::layout::LayoutAxisY;
 use polyhorn_ui::styles::{Position, Relative, ViewStyle};
 
+#[derive(Default)]
 pub struct NavigationBar {
     pub style: ViewStyle,
 }
@@ -44,8 +45,8 @@ impl Component for NavigationBar {
             ..Default::default()
         };
 
-        poly!(<View style=view_style ...>
-            <View style=content_style ...>
+        poly!(<View style=view_style>
+            <View style=content_style>
                 { manager.children() }
             </View>
         </View>)

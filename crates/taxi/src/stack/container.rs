@@ -87,7 +87,7 @@ where
             States::Background
         } else {
             States::Idle
-        } } style=style ...>
+        } } style=style>
             { element }
         </yoyo::View::<States>>)
     }

@@ -4,6 +4,7 @@ use yoyo::{components::DynPresence, use_presence, Presence};
 
 use super::ModalContext;
 
+#[derive(Default)]
 pub struct ModalContainer {
     pub on_dismiss: EventListener<()>,
 }
