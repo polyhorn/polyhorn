@@ -183,6 +183,12 @@ impl Color {
     }
 }
 
+impl Default for Color {
+    fn default() -> Self {
+        Color::transparent()
+    }
+}
+
 pub use named::NamedColor;
 
 #[cfg(test)]

@@ -43,10 +43,11 @@ impl LayoutAdjustment {
 
 /// A view that automatically adjusts its layout when the system keyboard
 /// appears, changes its dimensions or disappears.
+#[derive(Default)]
 pub struct KeyboardAvoidingView {
     /// Transformation function that should return a adjustment based on the
     /// keyboard's height, that we apply to the layout of this view.
-    pub transform: Arc<dyn Fn(f32) -> LayoutAdjustment + Send + Sync>,
+    pub transform: Option<Arc<dyn Fn(f32) -> LayoutAdjustment + Send + Sync>>,
 }
 
 impl Container for PLYKeyboardAvoidingView {
@@ -90,24 +91,26 @@ impl Component for KeyboardAvoidingView {
                         let layout = layout.clone();
 
                         view.set_on_keyboard(PLYCallback::new(move |height: NSNumber| {
-                            let adjustment = transform(height.float_value());
+                            if let Some(transform) = transform.as_ref() {
+                                let adjustment = transform(height.float_value());
 
-                            layout.set_style(ViewStyle {
-                                position: Position::Relative(Relative {
-                                    flex_grow: 1.0,
-                                    ..Default::default()
-                                }),
-                                margin: ByEdge {
-                                    vertical: LayoutAxisY {
-                                        bottom: adjustment.margin.vertical.bottom,
+                                layout.set_style(ViewStyle {
+                                    position: Position::Relative(Relative {
+                                        flex_grow: 1.0,
+                                        ..Default::default()
+                                    }),
+                                    margin: ByEdge {
+                                        vertical: LayoutAxisY {
+                                            bottom: adjustment.margin.vertical.bottom,
+                                            ..Default::default()
+                                        },
                                         ..Default::default()
                                     },
                                     ..Default::default()
-                                },
-                                ..Default::default()
-                            });
+                                });
 
-                            layout.layouter().write().unwrap().recompute_roots();
+                                layout.layouter().write().unwrap().recompute_roots();
+                            }
                         }));
                     }
 

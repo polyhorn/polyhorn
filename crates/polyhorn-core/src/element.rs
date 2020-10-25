@@ -206,6 +206,15 @@ where
     }
 }
 
+impl<P> Default for Element<P>
+where
+    P: Platform + ?Sized,
+{
+    fn default() -> Self {
+        Element::empty()
+    }
+}
+
 impl<P> From<Vec<Element<P>>> for Element<P>
 where
     P: Platform + ?Sized,
