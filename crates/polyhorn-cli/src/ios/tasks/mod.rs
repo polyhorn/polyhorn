@@ -27,7 +27,6 @@ pub use crate::core::tasks::InstallTarget;
 pub use crate::core::tasks::{Dependency, DependencyCheck, InstallDependencies};
 
 use crate::core::{Manager, Task};
-use crate::ios::simctl;
 use crate::Config;
 
 /// Context that gets passed through each task.
@@ -113,6 +112,12 @@ pub enum IOSError {
 impl From<std::io::Error> for IOSError {
     fn from(error: std::io::Error) -> Self {
         IOSError::IO(error)
+    }
+}
+
+impl From<simctl::Error> for IOSError {
+    fn from(error: simctl::Error) -> Self {
+        IOSError::Simctl(error)
     }
 }
 

@@ -1,16 +1,14 @@
 use ansi_term::Colour::Red;
 use dialoguer::{theme::ColorfulTheme, Select};
+use simctl::{DeviceQuery, Simctl};
 
 use crate::core::Executioner;
-use crate::ios::simctl;
 use crate::ios::tasks::{self, IOSContext, IOSTask};
 use crate::Config;
 
 /// iOS specific implementation of the `polyhorn run` command.
 pub fn run(config: Config) {
-    let mut simctl = simctl::Simctl::new();
-    let manager = simctl.list().unwrap();
-    let device = select_device(&manager);
+    let device = select_device(Simctl::new().list().unwrap().devices());
 
     let result = Executioner::execute(
         &[
@@ -40,21 +38,18 @@ pub fn run(config: Config) {
                 scheme: config.spec.app.name.clone() + "_iOS",
                 configuration: "Debug".to_owned(),
                 destination_platform: "iOS Simulator".to_owned(),
-                destination_name: device.name().to_owned(),
+                destination_name: device.name.clone(),
             }),
             IOSTask::BootIOSSimulator(tasks::BootIOSSimulator {
-                name: device.name().to_owned(),
-                identifier: device.identifier().to_owned(),
+                device: device.clone(),
             }),
             IOSTask::OpenIOSSimulator(tasks::OpenIOSSimulator),
             IOSTask::InstallOnIOSSimulator(tasks::InstallOnIOSSimulator {
-                name: device.name().to_owned(),
-                identifier: device.identifier().to_owned(),
+                device: device.clone(),
                 configuration: "Debug".to_owned(),
             }),
             IOSTask::RunOnIOSSimulator(tasks::RunOnIOSSimulator {
-                name: device.name().to_owned(),
-                identifier: device.identifier().to_owned(),
+                device: device.clone(),
             }),
         ],
         IOSContext {
@@ -73,19 +68,19 @@ pub fn run(config: Config) {
     }
 }
 
-pub fn select_device<'a>(manager: &'a simctl::DeviceManager) -> &'a simctl::Device<'a> {
-    let mut devices = manager
-        .query()
-        .into_iter()
-        .filter(|device| device.name().starts_with("iPhone") || device.name().starts_with("iPad"))
+pub fn select_device(devices: &[simctl::Device]) -> simctl::Device {
+    let mut devices = devices
+        .iter()
+        .available()
+        .filter(|device| device.name.starts_with("iPhone") || device.name.starts_with("iPad"))
         .collect::<Vec<_>>();
 
     let selections = devices
         .iter()
         .map(|device| {
-            device.name().to_owned()
-                + match device.state() {
-                    simctl::DeviceState::Booted => " [booted]",
+            device.name.to_owned()
+                + match device.state {
+                    simctl::list::DeviceState::Booted => " [booted]",
                     _ => "",
                 }
         })
@@ -98,5 +93,5 @@ pub fn select_device<'a>(manager: &'a simctl::DeviceManager) -> &'a simctl::Devi
         .interact()
         .unwrap();
 
-    devices.remove(selection)
+    devices.remove(selection).clone()
 }

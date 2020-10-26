@@ -2,7 +2,6 @@
 
 pub mod commands;
 pub mod infoplist;
-pub mod simctl;
 pub mod tasks;
 pub mod xcassets;
 pub mod xcodegen;

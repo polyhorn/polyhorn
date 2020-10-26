@@ -1,15 +1,13 @@
+use simctl::Device;
+
 use super::{IOSContext, IOSError};
 use crate::core::{Manager, Task};
-use crate::ios::simctl::Simctl;
 
 /// This task launches the application on an iOS Simulator with the given
 /// identifier.
 pub struct RunOnIOSSimulator {
-    /// The identifier of the iOS Simulator on which to launch the application.
-    pub identifier: String,
-
-    /// Name of the iOS Simulator.
-    pub name: String,
+    /// The iOS Simulator on which to launch the application.
+    pub device: Device,
 }
 
 impl Task for RunOnIOSSimulator {
@@ -25,7 +23,7 @@ impl Task for RunOnIOSSimulator {
     }
 
     fn detail(&self) -> &str {
-        &self.name
+        &self.device.name
     }
 
     fn run(
@@ -33,16 +31,11 @@ impl Task for RunOnIOSSimulator {
         context: Self::Context,
         _manager: &mut Manager,
     ) -> Result<Self::Context, Self::Error> {
-        let mut simctl = Simctl::new();
-
         eprintln!("");
 
-        if let Err(error) = simctl.launch(
-            &self.identifier,
-            &context.config.spec.app.ios.bundle_identifier,
-        ) {
-            return Err(IOSError::Simctl(error));
-        }
+        self.device
+            .launch(&context.config.spec.app.ios.bundle_identifier)
+            .exec()?;
 
         Ok(context)
     }

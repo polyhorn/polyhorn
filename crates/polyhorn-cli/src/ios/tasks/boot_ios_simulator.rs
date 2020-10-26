@@ -1,14 +1,12 @@
+use simctl::Device;
+
 use super::{IOSContext, IOSError};
 use crate::core::{Manager, Task};
-use crate::ios::simctl::Simctl;
 
 /// This tasks boots an iOS Simulator with the given identifier.
 pub struct BootIOSSimulator {
-    /// This is the name of the iOS Simulator that will be launched.
-    pub name: String,
-
-    /// This is the identifier of the iOS Simulator that will be launched.
-    pub identifier: String,
+    /// This is the iOS Simulator that will be booted.
+    pub device: Device,
 }
 
 impl Task for BootIOSSimulator {
@@ -24,7 +22,7 @@ impl Task for BootIOSSimulator {
     }
 
     fn detail(&self) -> &str {
-        &self.name
+        &self.device.name
     }
 
     fn run(
@@ -32,11 +30,7 @@ impl Task for BootIOSSimulator {
         context: Self::Context,
         _manager: &mut Manager,
     ) -> Result<Self::Context, Self::Error> {
-        let mut simctl = Simctl::new();
-
-        if let Err(error) = simctl.boot(&self.identifier) {
-            return Err(IOSError::Simctl(error));
-        }
+        self.device.boot()?;
 
         Ok(context)
     }
