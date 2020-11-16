@@ -11,6 +11,7 @@ members = [
     "crates/polyhorn-ios",
     "crates/polyhorn-ios-sys",
     "crates/polyhorn-macros",
+    "crates/polyhorn-test",
     "crates/polyhorn-ui",
     "crates/polyhorn-ui-macros",
     "crates/taxi",

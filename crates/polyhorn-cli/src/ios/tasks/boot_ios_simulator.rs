@@ -30,7 +30,7 @@ impl Task for BootIOSSimulator {
         context: Self::Context,
         _manager: &mut Manager,
     ) -> Result<Self::Context, Self::Error> {
-        self.device.boot()?;
+        let _ = self.device.boot();
 
         Ok(context)
     }

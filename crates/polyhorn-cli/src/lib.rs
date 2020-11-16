@@ -10,6 +10,7 @@ pub mod core;
 pub mod ios;
 pub mod spec;
 pub mod template;
+pub mod test;
 
 use clap::{AppSettings, Clap};
 use std::path::PathBuf;
@@ -53,6 +54,9 @@ enum SubCommand {
 
     /// Runs the app on a device or simulator.
     Run(commands::Run),
+
+    /// Tests the app on a device or simulator.
+    Test(commands::Test),
 }
 
 /// Entry point of the CLI that is used by the main `polyhorn` package. The
@@ -70,5 +74,6 @@ pub fn cli() {
     match opts.subcmd {
         SubCommand::Init(init) => init.main(),
         SubCommand::Run(run) => run.main(&opts.manifest_path),
+        SubCommand::Test(test) => test.main(&opts.manifest_path),
     }
 }

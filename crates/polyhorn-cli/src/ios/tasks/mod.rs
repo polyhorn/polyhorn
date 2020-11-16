@@ -5,6 +5,7 @@ use std::path::PathBuf;
 
 mod boot_ios_simulator;
 mod build_runtime_library;
+mod build_runtime_library_v2;
 mod build_xcodeproj;
 mod create_universal_binary;
 mod generate_xcassets;
@@ -15,6 +16,7 @@ mod run_on_ios_simulator;
 
 pub use boot_ios_simulator::BootIOSSimulator;
 pub use build_runtime_library::BuildRuntimeLibrary;
+pub use build_runtime_library_v2::BuildRuntimeLibraryV2;
 pub use build_xcodeproj::BuildXcodeproj;
 pub use create_universal_binary::CreateUniversalBinary;
 pub use generate_xcassets::GenerateXcassets;
@@ -51,6 +53,10 @@ pub enum IOSTask {
     /// This task builds the runtime library for the given target and with the
     /// given profile.
     BuildRuntimeLibrary(BuildRuntimeLibrary),
+
+    /// This task builds the runtime library for the given target and with the
+    /// given profile.
+    BuildRuntimeLibraryV2(BuildRuntimeLibraryV2),
 
     /// This task builds an .xcodeproj with a given scheme, configuration and
     /// destination.
@@ -129,6 +135,7 @@ impl Task for IOSTask {
         match self {
             IOSTask::BootIOSSimulator(task) => task.verb(),
             IOSTask::BuildRuntimeLibrary(task) => task.verb(),
+            IOSTask::BuildRuntimeLibraryV2(task) => task.verb(),
             IOSTask::BuildXcodeproj(task) => task.verb(),
             IOSTask::CreateUniversalBinary(task) => task.verb(),
             IOSTask::GenerateXcassets(task) => task.verb(),
@@ -145,6 +152,7 @@ impl Task for IOSTask {
         match self {
             IOSTask::BootIOSSimulator(task) => task.message(),
             IOSTask::BuildRuntimeLibrary(task) => task.message(),
+            IOSTask::BuildRuntimeLibraryV2(task) => task.message(),
             IOSTask::BuildXcodeproj(task) => task.message(),
             IOSTask::CreateUniversalBinary(task) => task.message(),
             IOSTask::GenerateXcassets(task) => task.message(),
@@ -161,6 +169,7 @@ impl Task for IOSTask {
         match self {
             IOSTask::BootIOSSimulator(task) => task.detail(),
             IOSTask::BuildRuntimeLibrary(task) => task.detail(),
+            IOSTask::BuildRuntimeLibraryV2(task) => task.detail(),
             IOSTask::BuildXcodeproj(task) => task.detail(),
             IOSTask::CreateUniversalBinary(task) => task.detail(),
             IOSTask::GenerateXcassets(task) => task.detail(),
@@ -181,6 +190,7 @@ impl Task for IOSTask {
         match self {
             IOSTask::BootIOSSimulator(task) => task.run(context, manager),
             IOSTask::BuildRuntimeLibrary(task) => task.run(context, manager),
+            IOSTask::BuildRuntimeLibraryV2(task) => task.run(context, manager),
             IOSTask::BuildXcodeproj(task) => task.run(context, manager),
             IOSTask::CreateUniversalBinary(task) => task.run(context, manager),
             IOSTask::GenerateXcassets(task) => task.run(context, manager),

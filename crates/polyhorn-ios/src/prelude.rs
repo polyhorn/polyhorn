@@ -6,7 +6,7 @@ pub use polyhorn_ui::prelude::*;
 
 pub use polyhorn_macros::poly;
 pub use polyhorn_ui::components::*;
-pub use polyhorn_ui_macros::{asset, style};
+pub use polyhorn_ui_macros::{asset, style, test};
 
 pub use super::{Component, Element, Manager};
 pub use crate::components::{KeyboardAvoidingView, LayoutAdjustment, TextInput, View};

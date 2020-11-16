@@ -2,9 +2,11 @@
 
 #![warn(missing_docs)]
 
-pub use polyhorn_core::{render, Context, ContextProvider, Key, Link, Reference, State};
+pub use polyhorn_core::{
+    render, Context, ContextProvider, Key, Link, Receiver, Reference, Sender, State,
+};
 pub use polyhorn_ui::{assets, color, font, geometry, layout, linalg, styles};
-pub use polyhorn_ui_macros::render;
+pub use polyhorn_ui_macros::{render, test};
 
 pub mod components;
 pub mod handles;
@@ -14,8 +16,8 @@ pub mod raw;
 /// Re-exports of hooks provided by Polyhorn Core and Polyhorn UI.
 pub mod hooks {
     pub use polyhorn_core::{
-        use_async, use_context, use_effect, use_id, use_layout_effect, use_reference, use_state,
-        UseAsync, UseContext, UseEffect, UseLayoutEffect, UseReference,
+        use_async, use_channel, use_context, use_effect, use_id, use_layout_effect, use_reference,
+        use_state, UseAsync, UseChannel, UseContext, UseEffect, UseLayoutEffect, UseReference,
     };
     pub use polyhorn_ui::hooks::*;
 }

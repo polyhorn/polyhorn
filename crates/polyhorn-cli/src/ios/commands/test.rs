@@ -6,9 +6,11 @@ use crate::core::Executioner;
 use crate::ios::tasks::{self, IOSContext, IOSTask};
 use crate::Config;
 
-/// iOS specific implementation of the `polyhorn run` command.
-pub fn run(config: Config) {
+/// iOS specific implementation of the `polyhorn test` command.
+pub fn test(config: Config) {
     let device = select_device(Simctl::new().list().unwrap().devices());
+
+    let (addr, _server) = crate::test::serve(device.clone());
 
     let result = Executioner::execute(
         &[
@@ -27,9 +29,11 @@ pub fn run(config: Config) {
                 ],
             }),
             IOSTask::InstallTarget(tasks::InstallTarget("x86_64-apple-ios")),
-            IOSTask::BuildRuntimeLibrary(tasks::BuildRuntimeLibrary {
+            IOSTask::BuildRuntimeLibraryV2(tasks::BuildRuntimeLibraryV2 {
+                cfg: "test",
                 target: "x86_64-apple-ios",
-                profile: "debug",
+                profile: "dev",
+                flags: &[],
             }),
             IOSTask::CreateUniversalBinary(tasks::CreateUniversalBinary),
             IOSTask::GenerateXcassets(tasks::GenerateXcassets),
@@ -43,14 +47,16 @@ pub fn run(config: Config) {
             IOSTask::BootIOSSimulator(tasks::BootIOSSimulator {
                 device: device.clone(),
             }),
-            IOSTask::OpenIOSSimulator(tasks::OpenIOSSimulator),
             IOSTask::InstallOnIOSSimulator(tasks::InstallOnIOSSimulator {
                 device: device.clone(),
                 configuration: "Debug".to_owned(),
             }),
             IOSTask::RunOnIOSSimulator(tasks::RunOnIOSSimulator {
                 device: device.clone(),
-                env: vec![],
+                env: vec![(
+                    "POLYHORN_TEST_FEEDBACK_URL".to_owned(),
+                    format!("http://{}/polyhorn/tests/test", addr),
+                )],
             }),
         ],
         IOSContext {

@@ -8,6 +8,10 @@ use crate::core::{Manager, Task};
 pub struct RunOnIOSSimulator {
     /// The iOS Simulator on which to launch the application.
     pub device: Device,
+
+    /// Additional environment variables that should be passed to the
+    /// application.
+    pub env: Vec<(String, String)>,
 }
 
 impl Task for RunOnIOSSimulator {
@@ -33,9 +37,15 @@ impl Task for RunOnIOSSimulator {
     ) -> Result<Self::Context, Self::Error> {
         eprintln!("");
 
-        self.device
-            .launch(&context.config.spec.app.ios.bundle_identifier)
-            .exec()?;
+        let mut launch = self
+            .device
+            .launch(&context.config.spec.app.ios.bundle_identifier);
+
+        for (name, value) in self.env.iter() {
+            launch.env(name, value);
+        }
+
+        launch.exec()?;
 
         Ok(context)
     }

@@ -1,5 +1,5 @@
 use futures::channel::mpsc::{self, TrySendError};
-use futures::{Future, StreamExt};
+use futures::{Future, SinkExt, StreamExt};
 
 use crate::{Key, Link, UseAsync, UseReference};
 
@@ -18,6 +18,10 @@ impl<T> Sender<T>
 where
     T: Send + 'static,
 {
+    pub fn send(&mut self, message: T) -> futures::sink::Send<mpsc::Sender<T>, T> {
+        self.0.send(message)
+    }
+
     pub fn try_send(&mut self, message: T) -> Result<(), TrySendError<T>> {
         self.0.try_send(message)
     }

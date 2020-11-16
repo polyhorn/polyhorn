@@ -16,7 +16,14 @@ pub fn render_impl_android(input: TokenStream) -> TokenStream {
             activity: *mut std::ffi::c_void,
         ) {
             let container = polyhorn::raw::OpaqueContainer::activity(env, activity);
-            std::mem::forget(polyhorn::render(|| poly!(#input), container));
+
+            #[cfg(test)] {
+                std::mem::forget(polyhorn::render(|| poly!(<polyhorn_test::App />), container));
+            }
+
+            #[cfg(not(test))] {
+                std::mem::forget(polyhorn::render(|| poly!(#input), container));
+            }
         }
     }
 }
@@ -27,10 +34,15 @@ pub fn render_impl_ios(input: TokenStream) -> TokenStream {
         #[no_mangle]
         #[cfg(target_os = "ios")]
         unsafe extern "C" fn __polyhorn_main() {
-            std::mem::forget(polyhorn::render(
-                || poly!(#input),
-                polyhorn::raw::OpaqueContainer::root(),
-            ));
+            let container = polyhorn::raw::OpaqueContainer::root();
+
+            #[cfg(test)] {
+                std::mem::forget(polyhorn::render(|| poly!(<polyhorn_test::App />), container));
+            }
+
+            #[cfg(not(test))] {
+                std::mem::forget(polyhorn::render(|| poly!(#input), container));
+            }
         }
     }
 }

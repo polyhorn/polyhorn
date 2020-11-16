@@ -2,9 +2,11 @@
 
 mod init;
 mod run;
+mod test;
 
 pub use init::Init;
 pub use run::Run;
+pub use test::Test;
 
 use clap::Clap;
 

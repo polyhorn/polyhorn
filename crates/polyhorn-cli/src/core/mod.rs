@@ -5,11 +5,13 @@ use ansi_term::Colour::{Cyan, Fixed, Green};
 use indicatif::{ProgressBar, ProgressStyle};
 
 mod cargo_build;
+mod cargo_rustc;
 mod change_crate_type;
 mod rasterize;
 pub mod tasks;
 
 pub use cargo_build::CargoBuild;
+pub use cargo_rustc::CargoRustc;
 pub use change_crate_type::change_crate_type;
 pub use rasterize::rasterize;
 
