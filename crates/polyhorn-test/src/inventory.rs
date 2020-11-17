@@ -1,9 +1,15 @@
+//! Functions for registering and querying Polyhorn tests.
+
 use std::future::Future;
 use std::pin::Pin;
 
 use super::Automator;
 
+/// Trait that is automatically implemented by any function that accepts an
+/// automator.
 pub trait Test<'a> {
+    /// Calls this test with the given automator. This function should return
+    /// a future.
     fn call(&self, automator: &'a mut Automator) -> Pin<Box<dyn Future<Output = ()> + 'a>>;
 }
 

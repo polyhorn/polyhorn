@@ -17,16 +17,21 @@ pub struct Request<T> {
     pub done: oneshot::Sender<()>,
 }
 
+/// Object that is optionally passed to each Polyhorn test and that can be used
+/// to automate rendering, snapshoting, simulating UI events, etc.
 pub struct Automator {
     name: &'static str,
     sender: Sender<Request<Automation>>,
 }
 
 impl Automator {
+    /// Returns a new automator with the given name that sends its requests
+    /// over a mpsc channel using the given sender.
     pub fn new(name: &'static str, sender: Sender<Request<Automation>>) -> Automator {
         Automator { name, sender }
     }
 
+    /// Renders the result of the given closure.
     pub async fn render<F>(&mut self, render: F)
     where
         F: FnOnce() -> Element + Send + Sync + 'static,
@@ -34,6 +39,7 @@ impl Automator {
         self.request(Automation::Render(Box::new(render))).await
     }
 
+    /// Takes a new screenshot and turns it into a snapshot with the given name.
     pub async fn snapshot(&mut self, name: &str) {
         self.request(Automation::Snapshot {
             test_name: self.name,
@@ -42,10 +48,12 @@ impl Automator {
         .await
     }
 
+    /// Opens an URL on the active device.
     pub async fn open_url(&mut self, url: &str) {
         self.request(Automation::OpenURL(url.to_owned())).await;
     }
 
+    /// Waits for the given duration before continuing.
     pub async fn wait(&mut self, duration: Duration) {
         self.request(Automation::Wait(duration)).await;
     }
