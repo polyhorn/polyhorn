@@ -1,8 +1,11 @@
 mod activity;
+mod bitmap;
+mod bitmap_factory;
 mod bridge;
 mod color;
 mod context;
 mod geometry;
+mod image_view;
 mod logger;
 mod reference;
 mod runnable;
@@ -10,10 +13,13 @@ mod thread;
 mod view;
 
 pub use activity::Activity;
+pub use bitmap::Bitmap;
+pub use bitmap_factory::BitmapFactory;
 pub use bridge::{Env, Object, VM};
 pub use color::Color;
 pub use context::Context;
 pub use geometry::Rect;
+pub use image_view::ImageView;
 pub use logger::{android_log_write, AndroidLogPriority};
 pub use reference::Reference;
 pub use runnable::Runnable;

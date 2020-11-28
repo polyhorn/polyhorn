@@ -25,10 +25,31 @@ pub struct Env<'a> {
     env: JNIEnv<'a>,
 }
 
+static mut SHARED_VM: Option<JavaVM> = None;
+
 impl<'a> Env<'a> {
     pub unsafe fn new(env: *mut sys::JNIEnv) -> Env<'a> {
-        Env {
+        let env = Env {
             env: JNIEnv::from_raw(env).unwrap(),
+        };
+
+        Self::set_vm(env.env.get_java_vm().unwrap());
+
+        env
+    }
+
+    pub fn set_vm(vm: JavaVM) {
+        unsafe {
+            SHARED_VM.replace(vm);
+        }
+    }
+
+    pub fn current() -> Env<'a> {
+        unsafe {
+            Env {
+                env: SHARED_VM.as_ref().map(|vm| vm.get_env()).unwrap().unwrap(),
+            }
+            .prolong_lifetime()
         }
     }
 
@@ -51,9 +72,21 @@ impl<'a> Env<'a> {
         sig: &str,
         args: &[JValue<'a>],
     ) -> JObject<'a> {
-        let args = args.into_iter().map(|&arg| arg.into()).collect::<Vec<_>>();
         let class = self.unwrap(self.env.find_class(name));
-        self.unwrap(self.env.new_object(class, &sig, &args))
+        let args = args.into_iter().map(|&arg| arg.into()).collect::<Vec<_>>();
+        self.unwrap(self.env.new_object(class, sig, &args))
+    }
+
+    pub unsafe fn call_static_method(
+        &self,
+        class: &str,
+        name: &str,
+        sig: &str,
+        args: &[JValue],
+    ) -> JValue<'a> {
+        let class = self.unwrap(self.env.find_class(class));
+        let args = args.into_iter().map(|&arg| arg.into()).collect::<Vec<_>>();
+        self.unwrap(self.env.call_static_method(class, name, sig, &args))
     }
 
     pub unsafe fn call_method(
@@ -94,6 +127,29 @@ impl<'a> Env<'a> {
         }
 
         value.unwrap()
+    }
+
+    pub unsafe fn assume_object(&self, value: JValue<'a>) -> JObject<'a> {
+        match value {
+            JValue::Object(object) => object,
+            _ => unreachable!(),
+        }
+    }
+
+    pub unsafe fn byte_array(&self, values: &[u8]) -> JObject<'a> {
+        assert!(values.len() <= std::i32::MAX as usize);
+
+        let array = self.unwrap(self.env.new_byte_array(values.len() as i32));
+        let elements = self.unwrap(self.env.get_byte_array_elements(array));
+        std::ptr::copy_nonoverlapping(values.as_ptr(), elements.0 as *mut u8, values.len());
+
+        self.unwrap(self.env.release_byte_array_elements(
+            array,
+            elements.0.as_mut().unwrap(),
+            jni::objects::ReleaseMode::NoCopyBack,
+        ));
+
+        array.into()
     }
 }
 
