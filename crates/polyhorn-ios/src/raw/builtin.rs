@@ -120,12 +120,12 @@ impl polyhorn_core::Builtin<Platform> for Builtin {
             }
         };
 
-        self.update(&mut container);
+        self.update(&mut container, environment);
 
         container
     }
 
-    fn update(&self, container: &mut OpaqueContainer) {
+    fn update(&self, container: &mut OpaqueContainer, _environment: &mut Environment) {
         match self {
             &Builtin::ImageView(style) => container.layout().unwrap().set_style(style),
             Builtin::Label(measure) => container.layout().unwrap().set_measure(measure.clone()),

@@ -10,5 +10,5 @@ where
         environment: &mut P::Environment,
     ) -> P::Container;
 
-    fn update(&self, container: &mut P::Container);
+    fn update(&self, container: &mut P::Container, environment: &mut P::Environment);
 }

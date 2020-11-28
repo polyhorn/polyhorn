@@ -40,9 +40,10 @@ where
         let container = instance.container();
         let builtin = element.builtin;
 
-        self.buffer.mutate(&[container], move |containers, _| {
-            builtin.update(containers[0]);
-        });
+        self.buffer
+            .mutate(&[container], move |containers, environment| {
+                builtin.update(containers[0], environment);
+            });
 
         self.rerender_edges(instance, vec![*element.children]);
     }

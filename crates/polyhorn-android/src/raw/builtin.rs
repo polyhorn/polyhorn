@@ -50,7 +50,7 @@ impl polyhorn_core::Builtin<Platform> for Builtin {
         container
     }
 
-    fn update(&self, container: &mut OpaqueContainer) {
+    fn update(&self, container: &mut OpaqueContainer, environment: &mut Environment) {
         match self {
             &Builtin::View(style) => {
                 container.layout().unwrap().set_style(style);
