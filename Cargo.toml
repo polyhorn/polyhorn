@@ -19,7 +19,3 @@ members = [
     "crates/yoyo-macros",
     "crates/yoyo-physics",
 ]
-
-exclude = [
-    "crates/polyhorn-cli",
-]
