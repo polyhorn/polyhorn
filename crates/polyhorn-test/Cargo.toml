@@ -1,9 +1,11 @@
 [package]
 name = "polyhorn-test"
-version = "0.3.2"
+version = "0.4.0"
 authors = ["Tim <tim@glacyr.com>"]
 edition = "2018"
 license = "MIT"
+description = "Client-side implementation of Polyhorn Test."
+repository = "https://github.com/polyhorn/polyhorn/tree/crates/polyhorn-test"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [lib]
@@ -15,4 +17,4 @@ reqwest = { version = "0.10.8", features = ["json", "native-tls-vendored"] }
 serde = { version = "1.0.117", features = ["derive"] }
 tokio = { version = "0.2.5", features = [ "rt-core", "stream", "sync", "time" ] }
 
-polyhorn = { version = "*", path = "../polyhorn" }
+polyhorn = { version = "0.4.0", path = "../polyhorn" }

@@ -87,18 +87,19 @@ This is the content of `src/lib.rs`:
 ```rust
 use polyhorn::prelude::*;
 
+#[derive(Default)]
 pub struct App {}
 
 impl Component for App {
     fn render(&self, _manager: &mut Manager) -> Element {
-        poly!(<Window ...>
-            <View style={ style! {
+        poly!(<Window>
+            <View style=!{
                 align-items: center;
                 justify-content: center;
                 background-color: red;
                 height: 100%;
-            } } ...>
-                <Text style={ style! { color: white; } }>
+            }>
+                <Text style=!{ color: white; }>
                     "Welcome to your Polyhorn app!"
                 </Text>
             </View>

@@ -1,6 +1,6 @@
 [package]
 name = "polyhorn-ui-macros"
-version = "0.3.2"
+version = "0.4.0"
 authors = ["Tim <tim@glacyr.com>"]
 edition = "2018"
 license = "MIT"
@@ -14,4 +14,4 @@ proc-macro = true
 [dependencies]
 proc-macro2 = "1.0.19"
 
-polyhorn-ui = { path = "../polyhorn-ui", features = ["macros"], version = "0.3.2" }
+polyhorn-ui = { path = "../polyhorn-ui", features = ["macros"], version = "0.4.0" }

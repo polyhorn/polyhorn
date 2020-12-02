@@ -1,6 +1,6 @@
 [package]
 name = "polyhorn-build-android"
-version = "0.3.2"
+version = "0.4.0"
 authors = ["Tim <tim@glacyr.com>"]
 edition = "2018"
 license = "MIT"
