@@ -1,4 +1,5 @@
 use cargo_lock::Lockfile;
+use semver::Version;
 use serde::Deserialize;
 use std::collections::HashMap;
 use std::fs::File;
@@ -28,7 +29,7 @@ fn generate_lockfile(path: &Path) -> Option<()> {
     Some(())
 }
 
-fn cli_version(path: &Path) -> Option<String> {
+fn cli_version(path: &Path) -> Option<Version> {
     let mut bytes = vec![];
     File::open(path.join(".polyhorn/.crates.toml"))
         .ok()?
@@ -44,10 +45,10 @@ fn cli_version(path: &Path) -> Option<String> {
     key?.split(" ")
         .skip(1)
         .next()
-        .map(|version| version.to_owned())
+        .and_then(|version| Version::parse(version).ok())
 }
 
-fn install(path: &Path, version: Option<String>) {
+fn install(path: &Path) {
     let mut command = Command::new("cargo");
     command.args(&[
         "install",
@@ -58,10 +59,6 @@ fn install(path: &Path, version: Option<String>) {
         ".polyhorn",
     ]);
     command.current_dir(path);
-
-    if let Some(version) = version {
-        command.args(&["--version", &format!("={}", version)]);
-    }
 
     match command.status() {
         Ok(status) if status.success() => {}
@@ -115,9 +112,11 @@ fn main() {
     match package {
         Some(package) => {
             // Check if we need to install a different version.
+            let package_version = Version::parse(&package.version.to_string()).unwrap();
+
             match cli_version(&manifest_dir) {
-                Some(version) if version == package.version.to_string() => {}
-                _ => install(&manifest_dir, Some(package.version.to_string())),
+                Some(version) if version >= package_version => {}
+                _ => install(&manifest_dir),
             }
 
             let args = std::env::args().collect::<Vec<_>>();
@@ -134,7 +133,7 @@ fn main() {
 
                     // Then, we download the CLI into this directory.
                     let manifest_dir = manifest_dir.join(name);
-                    install(&manifest_dir, None);
+                    install(&manifest_dir);
                     forward(&manifest_dir, &["init".to_owned(), name.to_owned()]);
                 }
                 _ => {
