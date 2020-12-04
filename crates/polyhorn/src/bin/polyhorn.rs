@@ -31,7 +31,7 @@ fn generate_lockfile(path: &Path) -> Option<()> {
 
 fn cli_version(path: &Path) -> Option<Version> {
     let mut bytes = vec![];
-    File::open(path.join(".polyhorn/.crates.toml"))
+    File::open(path.join(".polyhorn").join(".crates.toml"))
         .ok()?
         .read_to_end(&mut bytes)
         .ok()?;
@@ -68,7 +68,7 @@ fn install(path: &Path) {
 }
 
 fn forward(path: &Path, args: &[String]) {
-    let mut command = Command::new(path.join(".polyhorn/bin/polyhorn-cli"));
+    let mut command = Command::new(path.join(".polyhorn").join("bin").join("polyhorn-cli"));
     command.args(args);
     command.current_dir(path);
 
