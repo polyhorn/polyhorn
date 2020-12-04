@@ -26,7 +26,7 @@ impl polyhorn_core::Platform for Platform {
     {
         use std::sync::{Arc, RwLock};
 
-        log::set_logger(&AndroidLogger).unwrap();
+        let _ = log::set_logger(&AndroidLogger);
         log::set_max_level(log::LevelFilter::max());
 
         let activity = container.downcast_mut::<Activity>().unwrap().clone();
